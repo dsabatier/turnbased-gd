@@ -1,0 +1,53 @@
+[gd_scene load_steps=4 format=3 uid="uid://pgg3bcpsytjs"]
+
+[ext_resource type="Script" path="res://Scripts/Main.gd" id="1_aj1tq"]
+[ext_resource type="Script" path="res://Scripts/CombatSystem.gd" id="1_ehj7o"]
+[ext_resource type="Script" path="res://Scripts/CombatUI.gd" id="2_6w5mw"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_aj1tq")
+
+[node name="CombatSystem" type="Node" parent="."]
+script = ExtResource("1_ehj7o")
+
+[node name="CombatUI" type="Control" parent="." node_paths=PackedStringArray("combat_system", "log_container", "player_container", "enemy_container", "ability_container")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("2_6w5mw")
+combat_system = NodePath("../CombatSystem")
+log_container = NodePath("LogContainer")
+player_container = NodePath("PlayerContainer")
+enemy_container = NodePath("EnemyContainer")
+ability_container = NodePath("AbilityContainer")
+
+[node name="PlayerContainer" type="VBoxContainer" parent="CombatUI"]
+layout_mode = 0
+offset_right = 395.0
+offset_bottom = 265.0
+
+[node name="EnemyContainer" type="VBoxContainer" parent="CombatUI"]
+layout_mode = 0
+offset_left = 653.0
+offset_top = 5.0
+offset_right = 1149.0
+offset_bottom = 249.0
+
+[node name="AbilityContainer" type="HBoxContainer" parent="CombatUI"]
+layout_mode = 0
+offset_left = 409.0
+offset_top = 405.0
+offset_right = 789.0
+offset_bottom = 625.0
+
+[node name="LogContainer" type="RichTextLabel" parent="CombatUI"]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 83.0
+offset_right = 890.0
+offset_bottom = 342.0

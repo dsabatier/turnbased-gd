@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="Ability" load_steps=2 format=3 uid="uid://cl2d43o768v12"]
+
+[ext_resource type="Script" path="res://Scripts/Ability.gd" id="1_3xj3w"]
+
+[resource]
+script = ExtResource("1_3xj3w")
+name = "Basic Attack"
+power = 1
+target_type = 0
+description = ""
