@@ -51,15 +51,38 @@ enum StackingBehavior {
 @export var modify_max_hp: int = 0
 @export var modify_max_mp: int = 0
 
-@export var modification_type: int = 0  # 0 = flat, 1 = percent
+@export var modification_type: StatusEffect.StatModificationType = StatusEffect.StatModificationType.FLAT
 @export var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
 @export var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
 
 # Creates a StatusEffect instance from this resource
-# Update the create_status_effect_instance method to include the new properties
 func create_status_effect_instance() -> StatusEffect:
     var effect = StatusEffect.new()
-    # [existing code remains the same]
+    
+    # Set basic properties
+    effect.name = name
+    effect.description = description
+    effect.duration = duration
+    effect.remaining_turns = duration
+    effect.trigger_type = trigger_type
+    
+    # Set behavior properties
+    effect.effect_behavior = effect_behavior
+    effect.expiry_behavior = expiry_behavior
+    effect.stacking_behavior = stacking_behavior
+    effect.damage_reduction_percent = damage_reduction_percent
+    
+    # Handle ability reference
+    if ability is AbilityResource:
+        effect.ability = ability.create_ability_instance()
+    elif ability is Ability:
+        effect.ability = ability
+    
+    # Handle expiry ability reference
+    if expiry_ability is AbilityResource:
+        effect.expiry_ability = expiry_ability.create_ability_instance()
+    elif expiry_ability is Ability:
+        effect.expiry_ability = expiry_ability
     
     # Add stat modifiers
     if modify_physical_attack != 0:
@@ -86,5 +109,8 @@ func create_status_effect_instance() -> StatusEffect:
     # Set damage and healing modifiers
     effect.damage_dealt_percent_mod = damage_dealt_percent_mod
     effect.healing_dealt_percent_mod = healing_dealt_percent_mod
+    
+    # Store reference to this resource
+    effect.source_resource = self
     
     return effect

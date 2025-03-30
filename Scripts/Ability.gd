@@ -46,10 +46,14 @@ func execute(user, target):
 				var damage_modifier = 1.0
 				for effect in user.status_effects:
 					if effect.has_method("get") and effect.get("damage_dealt_percent_mod") != null:
+						# Convert percentage to decimal modifier and add to base multiplier
 						damage_modifier += effect.damage_dealt_percent_mod / 100.0
+						print("Applied damage modifier from effect " + effect.name + ": " + str(effect.damage_dealt_percent_mod) + "%, total modifier: " + str(damage_modifier))
 				
 				# Apply the modifier
+				var pre_mod_damage = damage
 				damage = int(damage * damage_modifier)
+				print("Damage before modifier: " + str(pre_mod_damage) + ", after: " + str(damage))
 				
 				var actual_damage = target.take_damage(damage, false)  # false = physical damage
 				
@@ -71,10 +75,14 @@ func execute(user, target):
 				var damage_modifier = 1.0
 				for effect in user.status_effects:
 					if effect.has_method("get") and effect.get("damage_dealt_percent_mod") != null:
+						# Convert percentage to decimal modifier and add to base multiplier
 						damage_modifier += effect.damage_dealt_percent_mod / 100.0
+						print("Applied damage modifier from effect " + effect.name + ": " + str(effect.damage_dealt_percent_mod) + "%, total modifier: " + str(damage_modifier))
 				
 				# Apply the modifier
+				var pre_mod_damage = damage
 				damage = int(damage * damage_modifier)
+				print("Damage before modifier: " + str(pre_mod_damage) + ", after: " + str(damage))
 				
 				var actual_damage = target.take_damage(damage, true)  # true = magical damage
 				
@@ -83,6 +91,8 @@ func execute(user, target):
 				# If damage was reduced, mention it
 				elif actual_damage < damage:
 					result = "%s used %s on %s for %d magical damage (reduced from %d)!" % [user_name, name, target_name, actual_damage, damage]
+				elif actual_damage > damage:
+					result = "%s used %s on %s for %d magical damage (increased from %d)!" % [user_name, name, target_name, actual_damage, damage]
 				else:
 					result = "%s used %s on %s for %d magical damage!" % [user_name, name, target_name, actual_damage]
 			
@@ -93,15 +103,22 @@ func execute(user, target):
 				var damage_modifier = 1.0
 				for effect in user.status_effects:
 					if effect.has_method("get") and effect.get("damage_dealt_percent_mod") != null:
+						# Convert percentage to decimal modifier and add to base multiplier
 						damage_modifier += effect.damage_dealt_percent_mod / 100.0
+						print("Applied damage modifier from effect " + effect.name + ": " + str(effect.damage_dealt_percent_mod) + "%, total modifier: " + str(damage_modifier))
 				
 				# Apply the modifier
+				var pre_mod_damage = damage
 				damage = int(damage * damage_modifier)
+				print("Damage before modifier: " + str(pre_mod_damage) + ", after: " + str(damage))
 				
 				var actual_damage = target.take_damage(damage)
 				
 				if custom_message != "":
 					result = custom_message.format({"user": user_name, "target": target_name, "power": actual_damage, "effect": name})
+				# If damage was reduced or increased, mention it
+				elif actual_damage != damage:
+					result = "%s used %s on %s for %d pure damage (modified from %d)!" % [user_name, name, target_name, actual_damage, damage]
 				else:
 					result = "%s used %s on %s for %d pure damage!" % [user_name, name, target_name, actual_damage]
 			
@@ -113,9 +130,12 @@ func execute(user, target):
 			for effect in user.status_effects:
 				if effect.has_method("get") and effect.get("healing_dealt_percent_mod") != null:
 					healing_modifier += effect.healing_dealt_percent_mod / 100.0
+					print("Applied healing modifier from effect " + effect.name + ": " + str(effect.healing_dealt_percent_mod) + "%, total modifier: " + str(healing_modifier))
 			
 			# Apply the modifier
+			var pre_mod_healing = healing
 			healing = int(healing * healing_modifier)
+			print("Healing before modifier: " + str(pre_mod_healing) + ", after: " + str(healing))
 			
 			target.heal(healing)
 			if custom_message != "":

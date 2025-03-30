@@ -135,10 +135,13 @@ func update_status_effects():
 		
 		panel.add_theme_stylebox_override("panel", style_box)
 		panel.custom_minimum_size = Vector2(12, 12)
-		panel.tooltip_text = effect.name + " (" + str(effect.remaining_turns) + " turns)"
+		
+		# Make sure we use the correct turns property (remaining_turns not duration)
+		panel.tooltip_text = effect.name + " (" + str(effect.remaining_turns) + " turns)" + \
+							"\n" + effect.description
 		
 		status_effects.add_child(panel)
-
+        
 func set_highlighted(is_highlighted: bool):
 	highlight.visible = is_highlighted
 

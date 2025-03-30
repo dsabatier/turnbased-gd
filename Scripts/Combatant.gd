@@ -60,8 +60,19 @@ func take_damage(amount: int, is_magical: bool = false) -> int:
 			if effect.effect_behavior == StatusEffect.EffectBehavior.REDUCE_DAMAGE:
 				var old_damage = reduced_amount
 				reduced_amount = effect.reduce_damage(reduced_amount)
+				
+				# Debug output
+				print("Effect " + effect.name + " modified damage: " + str(old_damage) + " -> " + str(reduced_amount))
+				
 				if reduced_amount < old_damage:
 					damage_reduction_message += "%s's %s reduced damage from %d to %d!\n" % [
+						display_name,
+						effect.name,
+						old_damage,
+						reduced_amount
+					]
+				elif reduced_amount > old_damage:
+					damage_reduction_message += "%s's %s increased damage from %d to %d!\n" % [
 						display_name,
 						effect.name,
 						old_damage,
@@ -76,12 +87,16 @@ func take_damage(amount: int, is_magical: bool = false) -> int:
 		is_defeated = true
 		emit_signal("defeated")
 	
+	# Print the damage reduction message for debugging
+	if damage_reduction_message != "":
+		print(damage_reduction_message)
+	
 	# Trigger ON_DAMAGE_TAKEN effects that apply abilities (not reduction effects)
 	var effect_results = trigger_status_effects(StatusEffect.TriggerType.ON_DAMAGE_TAKEN)
 	
 	# Return the actual damage dealt after reductions
 	return reduced_amount
-
+	
 func heal(amount: int) -> void:
 	current_hp = min(max_hp, current_hp + amount)
 	emit_signal("hp_changed", current_hp, max_hp)
