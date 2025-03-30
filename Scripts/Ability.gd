@@ -15,21 +15,26 @@ enum EffectType {DAMAGE, HEALING, STATUS, UTILITY}
 # For status effect abilities
 @export var status_effect: StatusEffect = null
 
+# This is the complete updated execute method for Ability.gd
 func execute(user, target):
+	# Get display name with proper fallbacks
+	var user_name = user.display_name if user.has_method("get") and user.get("display_name") != "" else user.name
+	var target_name = target.display_name if target.has_method("get") and target.get("display_name") != "" else target.name
+	
 	match effect_type:
 		EffectType.DAMAGE:
 			var damage = power
 			target.take_damage(damage)
 			if custom_message != "":
-				return custom_message.format({"user": user.name, "target": target.name, "power": damage, "effect": name})
-			return "%s used %s on %s for %d damage!" % [user.name, name, target.name, damage]
+				return custom_message.format({"user": user_name, "target": target_name, "power": damage, "effect": name})
+			return "%s used %s on %s for %d damage!" % [user_name, name, target_name, damage]
 			
 		EffectType.HEALING:
 			var healing = power
 			target.heal(healing)
 			if custom_message != "":
-				return custom_message.format({"user": user.name, "target": target.name, "power": healing})
-			return "%s used %s on %s for %d healing!" % [user.name, name, target.name, healing]
+				return custom_message.format({"user": user_name, "target": target_name, "power": healing})
+			return "%s used %s on %s for %d healing!" % [user_name, name, target_name, healing]
 			
 		EffectType.STATUS:
 			if status_effect != null:
@@ -39,21 +44,21 @@ func execute(user, target):
 				
 				if custom_message != "":
 					var formatted_message = custom_message.format({
-						"user": user.name, 
-						"target": target.name, 
+						"user": user_name, 
+						"target": target_name, 
 						"effect": status_effect.name,
 						"duration": status_effect.duration
 					})
 					return formatted_message
-				return "%s used %s on %s! %s" % [user.name, name, target.name, result]
+				return "%s used %s on %s! %s" % [user_name, name, target_name, result]
 			else:
-				return "%s used %s but nothing happened!" % [user.name, name]
+				return "%s used %s but nothing happened!" % [user_name, name]
 				
 		EffectType.UTILITY:
 			if custom_message != "":
-				return custom_message.format({"user": user.name, "target": target.name})
+				return custom_message.format({"user": user_name, "target": target_name})
 			elif name.begins_with("Skip"):
-				return "%s decided to %s!" % [user.name, name.to_lower()]
-			return "%s used %s!" % [user.name, name]
+				return "%s decided to %s!" % [user_name, name.to_lower()]
+			return "%s used %s!" % [user_name, name]
 				
 	return ""

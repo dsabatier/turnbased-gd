@@ -24,6 +24,7 @@ var target_combatant: Combatant # Who the effect is applied to
 func _init():
 	remaining_turns = duration
 
+# Update the apply method in StatusEffect.gd to use display_name
 func apply(target: Combatant, source: Combatant):
 	target_combatant = target
 	source_combatant = source
@@ -32,8 +33,12 @@ func apply(target: Combatant, source: Combatant):
 	# Register this effect with the target
 	target.add_status_effect(self)
 	
-	return "%s was affected by %s for %d turns!" % [target.name, name, duration]
+	# Get display name with proper fallbacks
+	var target_name = target.display_name
+	
+	return "%s was affected by %s for %d turns!" % [target_name, name, duration]
 
+# Update the trigger method in StatusEffect.gd to use display_name
 func trigger():
 	if remaining_turns <= 0:
 		return ""
@@ -45,7 +50,9 @@ func trigger():
 	
 	# Check if effect has expired
 	if remaining_turns <= 0:
-		var expiry_message = "%s has worn off from %s!" % [name, target_combatant.name]
+		# Get display name with proper fallbacks
+		var target_name = target_combatant.display_name
+		var expiry_message = "%s has worn off from %s!" % [name, target_name]
 		emit_signal("effect_expired", self)
 		return result + "\n" + expiry_message
 	

@@ -20,6 +20,10 @@ var status_effects: Array[StatusEffect] = []
 
 func _ready():
 	current_hp = max_hp
+	
+	# Initialize display_name if not set
+	if display_name == null or display_name.is_empty():
+		display_name = name
 
 func take_damage(amount: int) -> void:
 	current_hp = max(0, current_hp - amount)

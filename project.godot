@@ -11,11 +11,16 @@ config_version=5
 [application]
 
 config/name="Turn Based"
-run/main_scene="res://Scenes/main.tscn"
+run/main_scene="res://Scenes/boot.tscn"
 config/features=PackedStringArray("4.3", "GL Compatibility")
 config/icon="res://icon.svg"
+
+[autoload]
+
+CombatantDatabase="*res://Scripts/CombatantDatabase.gd"
 
 [rendering]
 
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+config_version=5

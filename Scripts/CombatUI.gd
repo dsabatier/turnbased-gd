@@ -1,5 +1,5 @@
-# CombatUI.gd
 extends Control
+
 
 @export var combat_system: CombatSystem
 @export var log_container: RichTextLabel
@@ -34,6 +34,13 @@ func _ready():
 func _on_combat_started():
 	setup_combatant_ui()
 	log_container.text = "Combat initialized. Prepare for battle!\n"
+	
+	# We need to ensure UI is ready for the first turn
+	if combat_system.current_turn_index < combat_system.turn_order.size():
+		var current_combatant = combat_system.turn_order[combat_system.current_turn_index]
+		if current_combatant.is_player:
+			update_ability_ui(current_combatant)
+			log_container.text += "It's " + current_combatant.display_name + "'s turn!\n"
 
 func setup_combatant_ui():
 	# Create buttons for player combatants
@@ -81,7 +88,9 @@ func setup_combatant_ui():
 
 # Helper function to update button text with status effects
 func update_combatant_button_text(button: Button, combatant: Combatant):
-	var text = combatant.name + " HP: " + str(combatant.current_hp) + "/" + str(combatant.max_hp)
+	# Use display_name if available, otherwise use node name
+	var display_name = combatant.display_name if combatant.has_method("get") and combatant.get("display_name") != null else combatant.name
+	var text = display_name + " HP: " + str(combatant.current_hp) + "/" + str(combatant.max_hp)
 	
 	# Add status effect icons/names if any exist
 	if combatant.status_effects.size() > 0:
@@ -94,10 +103,6 @@ func update_combatant_button_text(button: Button, combatant: Combatant):
 		text += "]"
 	
 	button.text = text
-
-func setup_ability_ui():
-	# This would be set up when a player's turn starts
-	pass
 
 func update_ability_ui(combatant: Combatant):
 	# Clear previous abilities
@@ -112,6 +117,9 @@ func update_ability_ui(combatant: Combatant):
 		button.tooltip_text = ability.description
 		button.pressed.connect(func(): _on_ability_selected(i))
 		ability_container.add_child(button)
+	
+	# Log the number of abilities for debugging
+	print("Added " + str(combatant.abilities.size()) + " ability buttons for " + combatant.name)
 
 func _on_ability_selected(index: int):
 	selected_ability = index
@@ -124,6 +132,8 @@ func _on_ability_selected(index: int):
 	if ability.target_type == Ability.TargetType.SELF:
 		combat_system.process_turn(selected_ability, current_combatant)
 		selected_ability = -1
+		# Clear ability buttons after turn completes
+		clear_ability_buttons()
 		return
 	
 	# Handle enemy targeting
@@ -170,22 +180,28 @@ func _on_enemy_selected(enemy: Combatant):
 	if selected_ability >= 0:
 		combat_system.process_turn(selected_ability, enemy)
 		selected_ability = -1
+		# Clear ability buttons after turn completes
+		clear_ability_buttons()
 
 func _on_friendly_selected(friendly: Combatant):
 	if selected_ability >= 0:
 		combat_system.process_turn(selected_ability, friendly)
 		selected_ability = -1
+		# Clear ability buttons after turn completes
+		clear_ability_buttons()
 
 func _on_combat_log_updated(message: String):
 	log_container.text += message + "\n"
 	log_container.scroll_to_line(log_container.get_line_count())
 
 func _on_turn_started(combatant: Combatant):
+	print("Turn started for " + combatant.name + " is_player=" + str(combatant.is_player))
+	
 	if combatant.is_player:
 		update_ability_ui(combatant)
-		log_container.text += "It's " + combatant.name + "'s turn!\n"
+		log_container.text += "It's " + combatant.display_name + "'s turn!\n"
 	else:
-		log_container.text += "It's " + combatant.name + "'s turn (CPU)!\n"
+		log_container.text += "It's " + combatant.display_name + "'s turn (CPU)!\n"
 	
 	# Disable all target selection until an ability is selected
 	for button in enemy_combatant_buttons + player_combatant_buttons:
@@ -196,3 +212,9 @@ func _on_combat_ended(winner: String):
 	# Disable all combat UI elements
 	for button in ability_container.get_children():
 		button.disabled = true
+
+# Add a new function to clear ability buttons
+func clear_ability_buttons() -> void:
+	# Remove all ability buttons
+	for child in ability_container.get_children():
+		child.queue_free()# CombatUI.gd

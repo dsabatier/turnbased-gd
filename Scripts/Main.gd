@@ -4,19 +4,60 @@ extends Node
 @onready var combat_system: CombatSystem = $CombatSystem
 
 func _ready() -> void:
-	# Create combatants
-	var combatants: Array[Combatant] = create_example_combatants()
-	
-	# Add all combatants as children (required for signals to work)
-	for combatant in combatants:
-		add_child(combatant)
-	
-	# Register combatants with the combat system
-	combat_system.player_combatants = [combatants[0], combatants[1]]
-	combat_system.cpu_combatants = [combatants[2], combatants[3]]
+	# Check if we're coming from the character selection screen
+	if CombatantDatabase.get_selected_party().size() > 0 and CombatantDatabase.get_selected_enemies().size() > 0:
+		# Use the selected combatants
+		setup_selected_combatants()
+	else:
+		# Create default combatants for testing
+		var combatants: Array[Combatant] = create_example_combatants()
+		
+		# Add all combatants as children (required for signals to work)
+		for combatant in combatants:
+			add_child(combatant)
+		
+		# Register combatants with the combat system
+		combat_system.player_combatants = [combatants[0], combatants[1]]
+		combat_system.cpu_combatants = [combatants[2], combatants[3]]
 	
 	# Start the combat
 	combat_system.start()
+
+func setup_selected_combatants() -> void:
+	var player_combatants: Array[Combatant] = CombatantDatabase.get_selected_party()
+	var enemy_combatants: Array[Combatant] = CombatantDatabase.get_selected_enemies()
+	
+	# Debug: Check abilities before initialization
+	print("Checking abilities for player combatants:")
+	for combatant in player_combatants:
+		print(combatant.name + " has " + str(combatant.abilities.size()) + " abilities:")
+		for ability in combatant.abilities:
+			print("  - " + ability.name)
+	
+	print("Checking abilities for enemy combatants:")
+	for combatant in enemy_combatants:
+		print(combatant.name + " has " + str(combatant.abilities.size()) + " abilities:")
+		for ability in combatant.abilities:
+			print("  - " + ability.name)
+	
+	# Ensure all combatants have the correct is_player value
+	for combatant in player_combatants:
+		combatant.is_player = true
+		print("Player combatant: " + combatant.name + " is_player=" + str(combatant.is_player))
+	
+	for combatant in enemy_combatants:
+		combatant.is_player = false
+		print("Enemy combatant: " + combatant.name + " is_player=" + str(combatant.is_player))
+	
+	# Add all combatants as children (required for signals to work)
+	for combatant in player_combatants + enemy_combatants:
+		# Initialize signals when adding as child
+		combatant._ready()
+		add_child(combatant)
+	
+	# Register combatants with the combat system
+	combat_system.player_combatants = player_combatants
+	combat_system.cpu_combatants = enemy_combatants
 
 # Example of creating combatants with special abilities
 func create_example_combatants() -> Array[Combatant]:
@@ -142,56 +183,8 @@ func create_test_ability() -> Ability:
 		"Burns the target for 5 damage over 3 turns"
 	)
 	
-	# Create a stun ability (placeholder - would need additional status effect type)
-	var stun_ability: Ability = Ability.new()
-	stun_ability.name = "Stun"
-	stun_ability.target_type = Ability.TargetType.ENEMY
-	stun_ability.description = "Prevents the target from acting for 1 turn"
-	stun_ability.effect_type = Ability.EffectType.STATUS
-	
-	# Example of loading from resources instead of creating in code
-	# This would require saving ability resources first
-	# var special_ability: Ability = load("res://resources/abilities/special_attack.tres")
-	
 	return fire_dot
 
-# For initializing a predefined battle scenario
-func setup_boss_battle() -> void:
-	# Create boss enemy
-	var boss: Combatant = Combatant.new()
-	boss.name = "Dark Lord"
-	boss.max_hp = 200
-	boss.current_hp = 200
-	boss.speed = 5
-	boss.is_player = false
-	
-	# Create boss abilities
-	var dark_blast: Ability = AbilityFactory.create_damage_ability(
-		"Dark Blast",
-		30,
-		Ability.TargetType.ENEMY,
-		"A powerful blast of dark energy"
-	)
-	
-	var life_drain: Ability = AbilityFactory.create_damage_ability(
-		"Life Drain",
-		20,
-		Ability.TargetType.ENEMY,
-		"Drains life from the target to heal the caster"
-	)
-	
-	# Add abilities to boss
-	boss.abilities = [dark_blast, life_drain]
-	
-	# Create player party
-	var player_party: Array[Combatant] = create_example_combatants()
-	
-	# Setup combat with boss
-	for combatant in player_party:
-		add_child(combatant)
-	add_child(boss)
-	
-	combat_system.player_combatants = [player_party[0], player_party[1]]
-	combat_system.cpu_combatants = [boss]
-	
-	combat_system.start()
+# Return to character selection screen
+func return_to_selection() -> void:
+	get_tree().change_scene_to_file("res://Scenes/character_selection.tscn")
