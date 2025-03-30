@@ -18,9 +18,12 @@ enum DamageType {PHYSICAL, MAGICAL, PURE} # Pure damage bypasses defenses
 # For status effect abilities
 @export var status_effect: StatusEffect = null
 
-# New properties for multi-effect abilities
+# For multi-effect abilities
 @export var additional_effects: Array = [] # Can contain Abilities or StatusEffects
 @export var apply_all_effects: bool = true # If false, apply effects randomly or conditionally
+
+# Reference to source resource (if created from a resource)
+var source_resource: Resource = null
 
 # This is the updated execute method for Ability.gd
 func execute(user, target):
@@ -167,4 +170,15 @@ func create_copy():
     new_ability.apply_all_effects = apply_all_effects
     new_ability.mp_cost = mp_cost
     new_ability.damage_type = damage_type
+    new_ability.source_resource = source_resource
     return new_ability
+
+# Static method to create an ability from a resource
+static func from_resource(ability_resource: AbilityResource) -> Ability:
+    if ability_resource == null:
+        return null
+    return ability_resource.create_ability_instance()
+
+# Check if this ability was created from a resource
+func is_from_resource() -> bool:
+    return source_resource != null

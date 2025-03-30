@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=3 format=3 uid="uid://g3usmv4sovt"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_a3ydx"]
+[ext_resource type="Resource" uid="uid://b8qgp4ky3h2vj" path="res://Resources/Abilities/fireball_ability.tres" id="2_ks6mh"]
+
+[resource]
+script = ExtResource("1_a3ydx")
+name = "Burn"
+description = "Taking fire damage at the end of each turn"
+duration = 3
+trigger_type = 1
+ability = ExtResource("2_ks6mh")
+effect_behavior = 0
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 0

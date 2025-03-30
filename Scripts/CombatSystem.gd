@@ -63,9 +63,7 @@ func check_combat_status() -> bool:
 	
 	return is_over
 
-# Process a turn for the current combatant
 func process_turn(ability_index: int, target_combatant: Combatant = null) -> void:
-	
 	var current_combatant = turn_order[current_turn_index]
 
 	# Debug output
@@ -79,9 +77,21 @@ func process_turn(ability_index: int, target_combatant: Combatant = null) -> voi
 	if current_combatant.is_defeated:
 		add_log("%s is defeated and cannot act!" % current_combatant.name)
 	else:
-		# Check if the ability requires MP
+		# Check if the ability index is valid
+		if ability_index < 0 or ability_index >= current_combatant.abilities.size():
+			add_log("Invalid ability index: %d" % ability_index)
+			return
+			
+		# Check if the ability exists
 		var ability = current_combatant.abilities[ability_index]
-		var mp_cost = ability.mp_cost if ability.has_method("get") and ability.get("mp_cost") != null else 0
+		if ability == null:
+			add_log("Ability at index %d is null!" % ability_index)
+			return
+			
+		# Check if the ability requires MP
+		var mp_cost = 0
+		if ability.has_method("get") and ability.get("mp_cost") != null:
+			mp_cost = ability.mp_cost
 		
 		if mp_cost > 0 and current_combatant.current_mp < mp_cost:
 			add_log("%s doesn't have enough MP to use %s!" % [current_combatant.display_name, ability.name])
@@ -96,13 +106,13 @@ func process_turn(ability_index: int, target_combatant: Combatant = null) -> voi
 				var mp_restore = 15
 				current_combatant.restore_mp(mp_restore)
 				add_log("%s meditates and restores %d MP!" % [current_combatant.display_name, mp_restore])
-			
+
 			var result = current_combatant.use_ability(ability_index, target_combatant)
 			add_log(result)
 	
 	# Process end-of-turn status effects
 	process_status_effects(current_combatant, StatusEffect.TriggerType.TURN_END)
-	
+
 	# Check if combat has ended after status effects
 	if not check_combat_status():
 		# We need to make sure we call process_next_turn with a slight delay

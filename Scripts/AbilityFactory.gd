@@ -2,6 +2,13 @@
 class_name AbilityFactory
 extends Node
 
+# Create an ability from a resource
+static func create_from_resource(resource_path: String) -> Ability:
+    var resource = load(resource_path)
+    if resource is AbilityResource:
+        return resource.create_ability_instance()
+    return null
+
 # Create a basic damage ability
 static func create_damage_ability(
     name: String, 
@@ -306,8 +313,5 @@ static func create_mp_restore_ability(
         ability.custom_message = custom_message
     else:
         ability.custom_message = "{user} restores {power} MP to {target}!"
-    
-    # We'll handle the MP restoration in the CombatSystem when abilities are used
-    # This is a placeholder for now
     
     return ability

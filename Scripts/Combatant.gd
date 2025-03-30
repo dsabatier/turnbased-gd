@@ -98,14 +98,27 @@ func restore_mp(amount: int) -> void:
     current_mp = min(max_mp, current_mp + amount)
     emit_signal("mp_changed", current_mp, max_mp)
 
+# Update this function in Combatant.gd
+
 func use_ability(ability_index: int, target = null) -> String:
     if is_defeated:
         return "%s is defeated and cannot act!" % display_name
+        
+    # Validate ability index
+    if ability_index < 0 or ability_index >= abilities.size():
+        return "%s tried to use an invalid ability!" % display_name
     
     var ability = abilities[ability_index]
     
+    # Check for null ability
+    if ability == null:
+        return "%s tried to use a null ability!" % display_name
+    
     # Check if we have enough MP to use this ability
-    var mp_cost = ability.mp_cost if ability.has_method("get") and ability.get("mp_cost") != null else 0
+    var mp_cost = 0
+    if ability.has_method("get") and ability.get("mp_cost") != null:
+        mp_cost = ability.mp_cost
+        
     if mp_cost > 0 and current_mp < mp_cost:
         return "%s doesn't have enough MP to use %s!" % [display_name, ability.name]
     

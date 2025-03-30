@@ -34,17 +34,21 @@ enum StackingBehavior {
 @export var trigger_type: TriggerType
 @export var ability: Ability # The ability to apply when triggered
 
-# New properties for enhanced status effects
+# Enhanced status effects properties
 @export var effect_behavior: EffectBehavior = EffectBehavior.APPLY_ABILITY
 @export var expiry_behavior: ExpiryBehavior = ExpiryBehavior.NONE
 @export var stacking_behavior: StackingBehavior = StackingBehavior.REPLACE
 @export var expiry_ability: Ability = null # The ability to apply when this effect expires
 @export var damage_reduction_percent: int = 0 # For damage reduction effects
 
+# Runtime properties (not exported)
 var source_combatant: Combatant # Who applied this status effect
 var remaining_turns: int
 var target_combatant: Combatant # Who the effect is applied to
 var unique_id: String = "" # Used to identify specific instances when stacking
+
+# Reference to source resource (if created from a resource)
+var source_resource: Resource = null
 
 func _init():
     remaining_turns = duration
@@ -169,4 +173,15 @@ func create_duplicate() -> StatusEffect:
     newStatusEffect.damage_reduction_percent = damage_reduction_percent
     newStatusEffect.unique_id = str(randi()) # Generate a new unique ID
     newStatusEffect.remaining_turns = duration
+    newStatusEffect.source_resource = source_resource
     return newStatusEffect
+
+# Static method to create a status effect from a resource
+static func from_resource(effect_resource: StatusEffectResource) -> StatusEffect:
+    if effect_resource == null:
+        return null
+    return effect_resource.create_status_effect_instance()
+
+# Check if this status effect was created from a resource
+func is_from_resource() -> bool:
+    return source_resource != null

@@ -244,11 +244,16 @@ func _show_abilities_for_combatant(combatant):
 	for i in range(combatant.abilities.size()):
 		var ability = combatant.abilities[i]
 		
+		# Skip if ability is null
+		if ability == null:
+			print("WARNING: Null ability found at index " + str(i) + " for " + combatant.display_name)
+			continue
+			
 		var button = Button.new()
 		button.custom_minimum_size = Vector2(0, 40)
 		
 		# Create ability name text with MP cost if applicable
-		var ability_text = ability.name
+		var ability_text = ability.name if ability.name else "Unknown Ability"
 		
 		# Add damage type info if available
 		if ability.has_method("get") and ability.get("effect_type") == Ability.EffectType.DAMAGE and ability.get("damage_type") != null:
@@ -267,43 +272,54 @@ func _show_abilities_for_combatant(combatant):
 			# Disable button if not enough MP
 			if combatant.current_mp < ability.mp_cost:
 				button.disabled = true
-		
+
 		button.text = ability_text
 		
 		# Add description as tooltip
-		button.tooltip_text = ability.description
-		
+		if ability.has_method("get") and ability.get("description") != null:
+			button.tooltip_text = ability.description
+
 		# Connect button signal
 		button.pressed.connect(_on_ability_selected.bind(i))
-		
 		ability_container.add_child(button)
-	
+
 	# Show popup
 	ability_popup.visible = true
 
 func _on_ability_selected(index):
 	selected_ability = index
 	
-	if current_combatant and selected_ability >= 0 and selected_ability < current_combatant.abilities.size():
-		var ability = current_combatant.abilities[selected_ability]
+	if current_combatant == null:
+		print("ERROR: No current combatant")
+		return
 		
-		print("Selected ability: " + ability.name + " with target type: " + str(ability.target_type))
+	if selected_ability < 0 or selected_ability >= current_combatant.abilities.size():
+		print("ERROR: Invalid ability index: " + str(selected_ability))
+		return
 		
-		# If it's a self-targeting ability, use it immediately
-		if ability.target_type == Ability.TargetType.SELF:
-			print("Executing self-targeted ability: " + ability.name)
-			combat_system.process_turn(selected_ability, current_combatant)
-			ability_popup.visible = false
-			selected_ability = -1
-			return
+	var ability = current_combatant.abilities[selected_ability]
+	
+	if ability == null:
+		print("ERROR: Null ability at index " + str(selected_ability))
+		return
+	
+	print("Selected ability: " + ability.name + " with target type: " + str(ability.target_type))
+	
+	# If it's a self-targeting ability, use it immediately
+	if ability.target_type == Ability.TargetType.SELF:
+		print("Executing self-targeted ability: " + ability.name)
+		combat_system.process_turn(selected_ability, current_combatant)
+		ability_popup.visible = false
+		selected_ability = -1
+		return
+	
+	# Visually indicate valid targets
+	_highlight_valid_targets(ability)
+	
+	# For complex target selection, show the target popup
+	if ability.target_type != Ability.TargetType.ENEMY and ability.target_type != Ability.TargetType.FRIENDLY:
+		_show_target_selection(ability)
 		
-		# Visually indicate valid targets
-		_highlight_valid_targets(ability)
-		
-		# For complex target selection, show the target popup
-		if ability.target_type != Ability.TargetType.ENEMY and ability.target_type != Ability.TargetType.FRIENDLY:
-			_show_target_selection(ability)
-
 func _highlight_valid_targets(ability):
 	# Reset all highlights and modulate
 	for view in player_views + enemy_views:

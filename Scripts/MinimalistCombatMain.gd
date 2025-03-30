@@ -72,9 +72,35 @@ func setup_selected_combatants() -> void:
 	combat_system.player_combatants = player_combatants
 	combat_system.cpu_combatants = enemy_combatants
 
-    # Example of creating combatants with special abilities for testing
+# Helper function to safely load ability from a resource
+func load_ability_from_resource(path: String) -> Ability:
+	var resource = load(path)
+
+	if resource is AbilityResource:
+		return resource.create_ability_instance()
+	return null
+
+# Then update the beginning of the create_example_combatants function
 func create_example_combatants() -> Array:
-	# Create a warrior
+	# Try to load abilities from resources first
+	var slash_ability = load_ability_from_resource("res://Resources/Abilities/slash.tres")
+	if slash_ability == null:
+		# If resource doesn't exist, create programmatically as fallback
+		slash_ability = AbilityFactory.create_damage_ability("Slash", 15, Ability.TargetType.ENEMY, "A strong sword slash")
+	
+	var fireball_ability = load_ability_from_resource("res://Resources/Abilities/fireball.tres")
+	if fireball_ability == null:
+		fireball_ability = AbilityFactory.create_damage_ability(
+			"Fireball", 
+			20, 
+			Ability.TargetType.ENEMY, 
+			"A ball of fire", 
+			"", 
+			10, 
+			Ability.DamageType.MAGICAL
+		)
+	
+	# Continue with creating combatants, using these safely loaded abilities
 	var warrior: Combatant = Combatant.new()
 	warrior.name = "Warrior"
 	warrior.display_name = "Warrior"
@@ -89,7 +115,7 @@ func create_example_combatants() -> Array:
 	warrior.speed = 8
 	warrior.is_player = true
 	warrior.abilities = [
-		AbilityFactory.create_damage_ability("Slash", 15, Ability.TargetType.ENEMY, "A strong sword slash"),
+		slash_ability,
 		AbilityFactory.create_damage_ability("Heavy Strike", 25, Ability.TargetType.ENEMY, "A powerful but slower attack", "", 10),
 		AbilityFactory.create_damage_reduction_ability("Defend", 30, 2, Ability.TargetType.SELF, "Prepare to block incoming attacks", "", 5),
 		AbilityFactory.create_skip_turn_ability("Skip Turn", "Skip this turn")
@@ -110,15 +136,7 @@ func create_example_combatants() -> Array:
 	wizard.speed = 10
 	wizard.is_player = true
 	wizard.abilities = [
-		AbilityFactory.create_damage_ability(
-			"Fireball", 
-			20, 
-			Ability.TargetType.ENEMY, 
-			"A ball of fire", 
-			"", 
-			10, 
-			Ability.DamageType.MAGICAL
-		),
+		fireball_ability,
 		AbilityFactory.create_dot_ability(
 			"Poison", 
 			8, 
@@ -131,6 +149,9 @@ func create_example_combatants() -> Array:
 		),
 		AbilityFactory.create_skip_turn_ability("Meditate", "Restore 15 MP")
 	]
+	
+	# Continue with the rest of the function...
+	# Example of creating combatants with special abilities for testing
 	
 	# Create a cleric
 	var cleric: Combatant = Combatant.new()

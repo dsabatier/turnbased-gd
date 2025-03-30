@@ -1,4 +1,4 @@
-[gd_scene load_steps=4 format=3 uid="uid://pgg3bcpsytjs"]
+[gd_scene load_steps=4 format=3 uid="uid://bsc4y28cjifn4"]
 
 [ext_resource type="Script" path="res://Scripts/Main.gd" id="1_aj1tq"]
 [ext_resource type="Script" path="res://Scripts/CombatSystem.gd" id="1_ehj7o"]
