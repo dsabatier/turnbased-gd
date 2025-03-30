@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatantResource" load_steps=6 format=3 uid="uid://byp5tws4e22r4"]
+
+[ext_resource type="Script" path="res://Scripts/CombatantResource.gd" id="1_7jfpm"]
+[ext_resource type="Resource" uid="uid://bsnvamjg5mkyh" path="res://Resources/Abilities/heavy_strike.tres" id="2_t5ivl"]
+[ext_resource type="Resource" uid="uid://br7cmv6g85wpd" path="res://Resources/Abilities/battle_stance.tres" id="3_rn42v"]
+[ext_resource type="Resource" uid="uid://dfj8rqumak3yk" path="res://Resources/Abilities/berserk.tres" id="4_qhbtg"]
+[ext_resource type="Resource" uid="uid://c3k24hxnf8etb" path="res://Resources/Abilities/whirlwind.tres" id="5_81slk"]
+
+[resource]
+script = ExtResource("1_7jfpm")
+name = "Warrior"
+display_name = "Berserker Warrior"
+is_player = true
+max_hp = 130
+max_mp = 50
+physical_attack = 22
+magic_attack = 4
+physical_defense = 16
+magic_defense = 8
+speed = 9
+abilities = Array[Resource]([ExtResource("2_t5ivl"), ExtResource("3_rn42v"), ExtResource("4_qhbtg"), ExtResource("5_81slk")])

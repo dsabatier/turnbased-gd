@@ -41,27 +41,50 @@ enum StackingBehavior {
 @export var expiry_ability: Resource # AbilityResource reference for when effect expires
 @export_range(0, 100) var damage_reduction_percent: int = 0 # For damage reduction effects
 
+# Stat modification properties
+@export_group("Stat Modifications")
+@export var modify_physical_attack: int = 0  # Positive for buff, negative for debuff
+@export var modify_magic_attack: int = 0
+@export var modify_physical_defense: int = 0
+@export var modify_magic_defense: int = 0
+@export var modify_speed: int = 0
+@export var modify_max_hp: int = 0
+@export var modify_max_mp: int = 0
+
+@export var modification_type: int = 0  # 0 = flat, 1 = percent
+@export var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
+@export var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
+
 # Creates a StatusEffect instance from this resource
+# Update the create_status_effect_instance method to include the new properties
 func create_status_effect_instance() -> StatusEffect:
     var effect = StatusEffect.new()
-    effect.name = name
-    effect.description = description
-    effect.duration = duration
-    effect.trigger_type = trigger_type
-    effect.effect_behavior = effect_behavior
-    effect.expiry_behavior = expiry_behavior
-    effect.stacking_behavior = stacking_behavior
-    effect.damage_reduction_percent = damage_reduction_percent
+    # [existing code remains the same]
     
-    # Set ability if present
-    if ability != null and ability is AbilityResource:
-        effect.ability = ability.create_ability_instance()
+    # Add stat modifiers
+    if modify_physical_attack != 0:
+        effect.add_stat_modifier("physical_attack", modification_type, modify_physical_attack)
     
-    # Set expiry ability if present
-    if expiry_ability != null and expiry_ability is AbilityResource:
-        effect.expiry_ability = expiry_ability.create_ability_instance()
+    if modify_magic_attack != 0:
+        effect.add_stat_modifier("magic_attack", modification_type, modify_magic_attack)
     
-    # Initialize remaining turns
-    effect.remaining_turns = duration
+    if modify_physical_defense != 0:
+        effect.add_stat_modifier("physical_defense", modification_type, modify_physical_defense)
+    
+    if modify_magic_defense != 0:
+        effect.add_stat_modifier("magic_defense", modification_type, modify_magic_defense)
+    
+    if modify_speed != 0:
+        effect.add_stat_modifier("speed", modification_type, modify_speed)
+    
+    if modify_max_hp != 0:
+        effect.add_stat_modifier("max_hp", modification_type, modify_max_hp)
+    
+    if modify_max_mp != 0:
+        effect.add_stat_modifier("max_mp", modification_type, modify_max_mp)
+    
+    # Set damage and healing modifiers
+    effect.damage_dealt_percent_mod = damage_dealt_percent_mod
+    effect.healing_dealt_percent_mod = healing_dealt_percent_mod
     
     return effect

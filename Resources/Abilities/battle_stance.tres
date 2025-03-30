@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=3 format=3 uid="uid://br7cmv6g85wpd"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_xc4i2"]
+[ext_resource type="Resource" uid="uid://ca78trsflsrk3" path="res://Resources/Abilities/StatusEffects/battle_stance_effect.tres" id="2_pfw3q"]
+
+[resource]
+script = ExtResource("1_xc4i2")
+name = "Battle Stance"
+power = 0
+target_type = 2
+description = "Enter an aggressive combat stance that increases physical attack by 25% but reduces defense by 15%"
+effect_type = 2
+custom_message = "{user} enters an aggressive battle stance, focusing on offense over defense!"
+mp_cost = 10
+damage_type = 0
+status_effect = ExtResource("2_pfw3q")
+additional_effects = Array[Resource]([])
+apply_all_effects = true

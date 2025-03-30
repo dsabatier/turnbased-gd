@@ -28,6 +28,87 @@ enum StackingBehavior {
     STACK           # Allow multiple instances of the same effect
 }
 
+# Stat modification properties
+enum StatModificationType {
+    FLAT,    # Add/subtract a flat value
+    PERCENT  # Modify by a percentage
+}
+
+# Tracks which stats this effect modifies
+class StatModifier:
+    var stat_name: String = ""  # "physical_attack", "magic_defense", etc.
+    var modification_type: int = StatModificationType.FLAT
+    var value: float = 0.0
+    var applied: bool = false   # Tracks if this modifier has been applied
+    
+    func _init(stat: String, mod_type: int, val: float):
+        stat_name = stat
+        modification_type = mod_type
+        value = val
+        
+    # Apply the modification to a combatant
+    func apply(combatant: Combatant) -> void:
+        if applied:
+            return
+            
+        # Store original value if not already tracked
+        if not combatant.has_meta("original_" + stat_name):
+            combatant.set_meta("original_" + stat_name, combatant.get(stat_name))
+        
+        var original_value = combatant.get_meta("original_" + stat_name)
+        var new_value = original_value
+        
+        if modification_type == StatModificationType.FLAT:
+            new_value = original_value + value
+        else:  # PERCENT
+            new_value = original_value * (1 + value / 100.0)
+        
+        # Apply the new value
+        combatant.set(stat_name, new_value)
+        applied = true
+        
+        print("Applied " + stat_name + " modifier: " + str(value) + 
+              " (original: " + str(original_value) + ", new: " + str(new_value) + ")")
+    
+    # Remove the modification from a combatant
+    func remove(combatant: Combatant) -> void:
+        if not applied:
+            return
+            
+        # Only restore if we have the original value
+        if combatant.has_meta("original_" + stat_name):
+            var original_value = combatant.get_meta("original_" + stat_name)
+            combatant.set(stat_name, original_value)
+            applied = false
+            
+            print("Removed " + stat_name + " modifier, restored to: " + str(original_value))
+
+# Add these as properties to the StatusEffect class
+@export var stat_modifiers: Array = []  # Will store StatModifier instances
+var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
+var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
+
+# Add this method to initialize a stat modifier
+func add_stat_modifier(stat_name: String, modification_type: int, value: float) -> void:
+    var modifier = StatModifier.new(stat_name, modification_type, value)
+    stat_modifiers.append(modifier)
+
+# Add this to the apply method, after the return statement
+func apply_stat_modifiers() -> void:
+    if target_combatant == null:
+        return
+        
+    for modifier in stat_modifiers:
+        modifier.apply(target_combatant)
+
+# Add this to the clean-up code when an effect expires or is removed
+func remove_stat_modifiers() -> void:
+    if target_combatant == null:
+        return
+        
+    for modifier in stat_modifiers:
+        modifier.remove(target_combatant)
+
 @export var name: String
 @export var description: String
 @export var duration: int # Number of turns this effect lasts
@@ -55,7 +136,7 @@ func _init():
     # Generate a unique ID for this instance
     unique_id = str(randi())
 
-# Updated apply method to handle stacking behavior
+# Updated apply method for StatusEffect.gd
 func apply(target: Combatant, source: Combatant):
     target_combatant = target
     source_combatant = source
@@ -71,6 +152,8 @@ func apply(target: Combatant, source: Combatant):
                 # Remove the old effect and apply this one
                 target.remove_status_effect(existing_effect)
                 target.add_status_effect(self)
+                # Apply stat modifiers
+                apply_stat_modifiers()
                 return "%s's %s was replaced with a new instance!" % [target.display_name, name]
                 
             StackingBehavior.REFRESH:
@@ -91,11 +174,16 @@ func apply(target: Combatant, source: Combatant):
             StackingBehavior.STACK:
                 # Add this as a new instance
                 target.add_status_effect(self)
+                # Apply stat modifiers
+                apply_stat_modifiers()
                 return "%s was affected by another instance of %s for %d turns!" % [target.display_name, name, duration]
     else:
         # No existing effect, just add this one
         target.add_status_effect(self)
+        # Apply stat modifiers
+        apply_stat_modifiers()
         return "%s was affected by %s for %d turns!" % [target.display_name, name, duration]
+        
 
 # Find an existing effect of the same type on the target
 func find_existing_effect(target: Combatant) -> StatusEffect:
@@ -105,8 +193,7 @@ func find_existing_effect(target: Combatant) -> StatusEffect:
             return effect
     return null
 
-# Updated trigger method to handle different behaviors
-# Updated trigger method with null checks
+
 func trigger(damage = null):
     if remaining_turns <= 0:
         return ""
@@ -170,8 +257,32 @@ func trigger(damage = null):
         emit_signal("effect_expired", self)
         return result + "\n" + expiry_message
     
+    # Check if effect has expired
+    if remaining_turns <= 0:
+        # Get display name with proper fallbacks
+        var target_name = "Unknown"
+        if target_combatant != null:
+            target_name = target_combatant.display_name
+            
+        var expiry_message = "%s has worn off from %s!" % [name, target_name]
+        
+        # Remove stat modifiers when the effect expires
+        remove_stat_modifiers()
+        
+        # Handle expiry behavior
+        if expiry_behavior == ExpiryBehavior.APPLY_ABILITY and expiry_ability != null:
+            # Make sure source and target combatants are valid
+            if source_combatant != null and target_combatant != null:
+                var expiry_result = expiry_ability.execute(source_combatant, target_combatant)
+                expiry_message += "\n" + expiry_result
+            else:
+                expiry_message += "\nCouldn't apply expiry effect due to missing combatants"
+        
+        emit_signal("effect_expired", self)
+        return result + "\n" + expiry_message
+        
     return result
-    
+
 # Method specifically for damage reduction effects 
 func reduce_damage(damage_amount):
     if effect_behavior != EffectBehavior.REDUCE_DAMAGE:

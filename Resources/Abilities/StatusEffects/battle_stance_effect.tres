@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=2 format=3 uid="uid://ca78trsflsrk3"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_cjw7q"]
+
+[resource]
+script = ExtResource("1_cjw7q")
+name = "Battle Stance"
+description = "Increases physical attack by 25% but reduces physical defense by 15% for 4 turns"
+duration = 4
+trigger_type = 0
+effect_behavior = 0
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 0
+modify_physical_attack = 25
+modify_magic_attack = 0
+modify_physical_defense = -15
+modify_magic_defense = 0
+modify_speed = 0
+modify_max_hp = 0
+modify_max_mp = 0
+modification_type = 1
+damage_dealt_percent_mod = 0.0
+healing_dealt_percent_mod = 0.0

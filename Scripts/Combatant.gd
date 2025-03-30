@@ -228,6 +228,9 @@ func add_status_effect(effect: StatusEffect) -> void:
 
 func remove_status_effect(effect: StatusEffect) -> void:
 	if effect in status_effects:
+		# Make sure to remove stat modifiers before removing the effect
+		effect.remove_stat_modifiers()
+		
 		status_effects.erase(effect)
 		if effect.is_connected("effect_expired", _on_status_effect_expired):
 			effect.disconnect("effect_expired", _on_status_effect_expired)
