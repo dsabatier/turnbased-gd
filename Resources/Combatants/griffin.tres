@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CombatantResource" load_steps=5 format=3 uid="uid://duhxm4x32o7wl"]
+
+[ext_resource type="Script" path="res://Scripts/CombatantResource.gd" id="1_hxb42"]
+[ext_resource type="Resource" uid="uid://c5xmr4gwxbv4v" path="res://Resources/Abilities/razor_talon.tres" id="2_4rl1y"]
+[ext_resource type="Resource" uid="uid://dmllehfupb8lw" path="res://Resources/Abilities/wing_buffet.tres" id="3_fsvnj"]
+[ext_resource type="Resource" uid="uid://cyqgfrng6m11q" path="res://Resources/Abilities/screech.tres" id="4_6hd2r"]
+
+[resource]
+script = ExtResource("1_hxb42")
+name = "Griffin"
+display_name = "Royal Griffin"
+is_player = false
+max_hp = 120
+max_mp = 40
+physical_attack = 18
+magic_attack = 5
+physical_defense = 14
+magic_defense = 10
+speed = 15
+abilities = Array[Resource]([ExtResource("2_4rl1y"), ExtResource("3_fsvnj"), ExtResource("4_6hd2r")])

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatantResource" load_steps=6 format=3 uid="uid://dfuiho2m6vglc"]
+
+[ext_resource type="Script" path="res://Scripts/CombatantResource.gd" id="1_h3qu7"]
+[ext_resource type="Resource" uid="uid://c4hg5cwkwjhw1" path="res://Resources/Abilities/precise_shot.tres" id="2_jxky5"]
+[ext_resource type="Resource" uid="uid://bfjf04flrtjwq" path="res://Resources/Abilities/quick_shot.tres" id="3_gjgyr"]
+[ext_resource type="Resource" uid="uid://dlq15r0qe3vmw" path="res://Resources/Abilities/poison_arrow.tres" id="4_c5bhj"]
+[ext_resource type="Resource" uid="uid://c84pwkbbfn32s" path="res://Resources/Abilities/aim.tres" id="5_6j5qi"]
+
+[resource]
+script = ExtResource("1_h3qu7")
+name = "Ranger"
+display_name = "Ranger"
+is_player = true
+max_hp = 85
+max_mp = 70
+physical_attack = 16
+magic_attack = 10
+physical_defense = 12
+magic_defense = 12
+speed = 15
+abilities = Array[Resource]([ExtResource("2_jxky5"), ExtResource("3_gjgyr"), ExtResource("4_c5bhj"), ExtResource("5_6j5qi")])

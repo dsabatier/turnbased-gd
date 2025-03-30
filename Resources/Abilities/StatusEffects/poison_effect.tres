@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=3 format=3 uid="uid://dd6p8bdnfnk51"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_p5a11"]
+[ext_resource type="Resource" uid="uid://dd2q11lrxmyvw" path="res://Resources/Abilities/poison_tick.tres" id="2_hxx8a"]
+
+[resource]
+script = ExtResource("1_p5a11")
+name = "Poison"
+description = "Taking 5 damage at the end of each turn for 3 turns"
+duration = 3
+trigger_type = 1
+ability = ExtResource("2_hxx8a")
+effect_behavior = 0
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 0

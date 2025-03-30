@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=3 format=3 uid="uid://bwt4vqohoxwkj"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_edrfg"]
+
+[sub_resource type="Resource" id="Resource_hen0s"]
+metadata/__load_path__ = "res://Resources/Abilities/regeneration_tick.tres"
+
+[resource]
+script = ExtResource("1_edrfg")
+name = "Regeneration"
+description = "Healing 8 HP at the start of each turn for 3 turns"
+duration = 3
+trigger_type = 0
+ability = SubResource("Resource_hen0s")
+effect_behavior = 0
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 0

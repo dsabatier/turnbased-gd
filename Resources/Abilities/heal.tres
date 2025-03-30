@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=2 format=3 uid="uid://bggtwa4gfxro6"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_5bkqj"]
+
+[resource]
+script = ExtResource("1_5bkqj")
+name = "Heal"
+power = 20
+target_type = 1
+description = "Heals an ally for 20 HP"
+effect_type = 1
+custom_message = "{user} channels healing energy to restore {power} HP to {target}!"
+mp_cost = 10
+damage_type = 0
+additional_effects = Array[Resource]([])
+apply_all_effects = true

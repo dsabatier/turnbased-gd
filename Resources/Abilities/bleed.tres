@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=3 format=3 uid="uid://chktolqafbdgn"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_qsmrr"]
+[ext_resource type="Resource" uid="uid://dcdnr7qr8o5hw" path="res://Resources/Abilities/StatusEffects/bleed_effect.tres" id="2_4pn5i"]
+
+[resource]
+script = ExtResource("1_qsmrr")
+name = "Bleed"
+power = 0
+target_type = 0
+description = "Causes bleeding for 7 damage over 4 turns"
+effect_type = 2
+custom_message = "{user} inflicts a bleeding wound on {target}!"
+mp_cost = 12
+damage_type = 0
+status_effect = ExtResource("2_4pn5i")
+additional_effects = Array[Resource]([])
+apply_all_effects = true

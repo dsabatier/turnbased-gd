@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=2 format=3 uid="uid://dnk7yhrwuwyls"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_k4gf1"]
+
+[resource]
+script = ExtResource("1_k4gf1")
+name = "Life Drain Heal"
+power = 9
+target_type = 2
+description = "Healing component of Life Drain"
+effect_type = 1
+custom_message = "{user} absorbs energy, healing for {power} HP!"
+mp_cost = 0
+damage_type = 0
+additional_effects = Array[Resource]([])
+apply_all_effects = true

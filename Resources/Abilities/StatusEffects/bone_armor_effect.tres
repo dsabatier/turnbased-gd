@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=2 format=3 uid="uid://dkw6ghrnfrge6"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_6a34j"]
+
+[resource]
+script = ExtResource("1_6a34j")
+name = "Bone Armor"
+description = "Reduces incoming physical damage by 50% for 3 turns"
+duration = 3
+trigger_type = 2
+effect_behavior = 1
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 50

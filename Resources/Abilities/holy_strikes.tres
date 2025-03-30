@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=2 format=3 uid="uid://dclxnujjx3r41"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_sxegs"]
+
+[resource]
+script = ExtResource("1_sxegs")
+name = "Holy Strike"
+power = 18
+target_type = 0
+description = "A powerful strike imbued with holy energy"
+effect_type = 0
+custom_message = "{user} strikes {target} with holy light for {power} damage!"
+mp_cost = 8
+damage_type = 1
+additional_effects = Array[Resource]([])
+apply_all_effects = true

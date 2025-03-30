@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=3 format=3 uid="uid://ch7m1i41m6ei7"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_kfyui"]
+[ext_resource type="Resource" uid="uid://bwt4vqohoxwkj" path="res://Resources/Abilities/StatusEffects/regeneration_effect.tres" id="2_84qdm"]
+
+[resource]
+script = ExtResource("1_kfyui")
+name = "Regeneration"
+power = 0
+target_type = 1
+description = "Heals 8 HP per turn for 3 turns"
+effect_type = 2
+custom_message = "{user} casts a regeneration spell on {target}, healing them for the next {duration} turns!"
+mp_cost = 15
+damage_type = 0
+status_effect = ExtResource("2_84qdm")
+additional_effects = Array[Resource]([])
+apply_all_effects = true

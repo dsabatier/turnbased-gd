@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=3 format=3 uid="uid://cyqgfrng6m11q"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_ey2g5"]
+[ext_resource type="Resource" uid="uid://dswwv4yg5jt3a" path="res://Resources/Abilities/StatusEffects/terrified_effect.tres" id="2_1kheh"]
+
+[resource]
+script = ExtResource("1_ey2g5")
+name = "Screech"
+power = 0
+target_type = 0
+description = "Emits a terrifying screech that reduces the target's physical and magical attack"
+effect_type = 2
+custom_message = "{user} unleashes a deafening screech that terrifies {target}!"
+mp_cost = 15
+damage_type = 0
+status_effect = ExtResource("2_1kheh")
+additional_effects = Array[Resource]([])
+apply_all_effects = true

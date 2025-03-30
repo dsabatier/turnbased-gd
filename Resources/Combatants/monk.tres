@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatantResource" load_steps=6 format=3 uid="uid://c75r36tlq73qb"]
+
+[ext_resource type="Script" path="res://Scripts/CombatantResource.gd" id="1_ylduc"]
+[ext_resource type="Resource" uid="uid://c0wj2ug3hkdqn" path="res://Resources/Abilities/flurry_of_blows.tres" id="2_m7b32"]
+[ext_resource type="Resource" uid="uid://bm2eo7rmnr25e" path="res://Resources/Abilities/flying_kick.tres" id="3_4f52n"]
+[ext_resource type="Resource" uid="uid://dt5ehcuqt1j80" path="res://Resources/Abilities/meditation.tres" id="4_5p7rg"]
+[ext_resource type="Resource" uid="uid://cw3k1ysxf1h7b" path="res://Resources/Abilities/pressure_point.tres" id="5_a6ucv"]
+
+[resource]
+script = ExtResource("1_ylduc")
+name = "Monk"
+display_name = "Monk"
+is_player = true
+max_hp = 80
+max_mp = 60
+physical_attack = 16
+magic_attack = 8
+physical_defense = 12
+magic_defense = 12
+speed = 18
+abilities = Array[Resource]([ExtResource("2_m7b32"), ExtResource("3_4f52n"), ExtResource("4_5p7rg"), ExtResource("5_a6ucv")])

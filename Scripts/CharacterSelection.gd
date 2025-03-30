@@ -256,3 +256,40 @@ func _on_start_battle_button_pressed() -> void:
 	
 	add_child(ui_dialog)
 	ui_dialog.popup_centered()
+
+	# Add this function to CharacterSelection.gd
+
+# Function to handle combatants created from resources
+func add_to_party_from_resource(combatant_resource: CombatantResource) -> void:
+	if selected_party.size() >= MAX_PARTY_SIZE:
+		return
+	
+	# Create a combatant instance from the resource
+	var combatant = combatant_resource.create_combatant_instance()
+	combatant.is_player = true
+	
+	selected_party.append(combatant)
+	
+	# Create UI element
+	var option: HBoxContainer = create_selection_item(combatant, true)
+	party_list.add_child(option)
+	
+	update_labels()
+	update_start_button()
+
+func add_to_enemies_from_resource(combatant_resource: CombatantResource) -> void:
+	if selected_enemies.size() >= MAX_ENEMY_SIZE:
+		return
+	
+	# Create a combatant instance from the resource
+	var combatant = combatant_resource.create_combatant_instance()
+	combatant.is_player = false
+	
+	selected_enemies.append(combatant)
+	
+	# Create UI element
+	var option: HBoxContainer = create_selection_item(combatant, false)
+	enemy_list.add_child(option)
+	
+	update_labels()
+	update_start_button()

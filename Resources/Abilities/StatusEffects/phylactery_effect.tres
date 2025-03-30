@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=2 format=3 uid="uid://dx3kqfgx6h44p"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_ejg0o"]
+
+[resource]
+script = ExtResource("1_ejg0o")
+name = "Phylactery Shield"
+description = "Reduces all damage taken by 60% for 3 turns"
+duration = 3
+trigger_type = 2
+effect_behavior = 1
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 60

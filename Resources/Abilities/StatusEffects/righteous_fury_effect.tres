@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=3 format=3 uid="uid://c7wqd3paxhbgp"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_2yj4c"]
+[ext_resource type="Resource" uid="uid://cn4e67a7a11qd" path="res://Resources/Abilities/StatusEffects/attack_boost_tick.tres" id="2_u4yd3"]
+
+[resource]
+script = ExtResource("1_2yj4c")
+name = "Righteous Fury"
+description = "Increases physical attack by 30% for 3 turns"
+duration = 3
+trigger_type = 0
+ability = ExtResource("2_u4yd3")
+effect_behavior = 0
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 0

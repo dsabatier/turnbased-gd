@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatantResource" load_steps=6 format=3 uid="uid://b4ufj78tncgtj"]
+
+[ext_resource type="Script" path="res://Scripts/CombatantResource.gd" id="1_3xyfo"]
+[ext_resource type="Resource" uid="uid://bcglorpf65o1s" path="res://Resources/Abilities/smite.tres" id="2_kyr4s"]
+[ext_resource type="Resource" uid="uid://bggtwa4gfxro6" path="res://Resources/Abilities/heal.tres" id="3_jktp6"]
+[ext_resource type="Resource" uid="uid://ch7m1i41m6ei7" path="res://Resources/Abilities/regeneration.tres" id="4_qj84m"]
+[ext_resource type="Resource" uid="uid://cb45gtvr87dx1" path="res://Resources/Abilities/protect.tres" id="5_tn2pw"]
+
+[resource]
+script = ExtResource("1_3xyfo")
+name = "Cleric"
+display_name = "Cleric"
+is_player = true
+max_hp = 90
+max_mp = 85
+physical_attack = 8
+magic_attack = 15
+physical_defense = 12
+magic_defense = 18
+speed = 7
+abilities = Array[Resource]([ExtResource("2_kyr4s"), ExtResource("3_jktp6"), ExtResource("4_qj84m"), ExtResource("5_tn2pw")])

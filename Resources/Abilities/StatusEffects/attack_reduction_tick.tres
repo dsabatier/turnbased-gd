@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=2 format=3 uid="uid://befjc7v4efnns"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_6c8p1"]
+
+[resource]
+script = ExtResource("1_6c8p1")
+name = "Attack Reduction"
+power = 0
+target_type = 0
+description = "Reduces physical attack"
+effect_type = 3
+custom_message = "{target}'s physical attacks are weakened!"
+mp_cost = 0
+damage_type = 0
+additional_effects = Array[Resource]([])
+apply_all_effects = true

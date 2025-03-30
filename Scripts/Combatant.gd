@@ -29,6 +29,8 @@ var abilities: Array[Ability] = []
 var is_defeated: bool = false
 var status_effects: Array[StatusEffect] = []
 
+var source_resource: Resource = null
+
 func _ready():
 	current_hp = max_hp
 	current_mp = max_mp
@@ -255,3 +257,13 @@ func trigger_status_effects(trigger: int) -> Array[String]:
 				emit_signal("status_effect_triggered", effect, result)
 	
 	return results
+
+# Static method to create a combatant from a resource
+static func from_resource(combatant_resource: CombatantResource) -> Combatant:
+	if combatant_resource == null:
+		return null
+	return combatant_resource.create_combatant_instance()
+
+# Check if this combatant was created from a resource
+func is_from_resource() -> bool:
+	return source_resource != null

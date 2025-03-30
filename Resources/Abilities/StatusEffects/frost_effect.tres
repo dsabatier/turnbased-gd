@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=3 format=3 uid="uid://dntmepmbdbh7v"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_60k6y"]
+[ext_resource type="Resource" uid="uid://dm2osc6r8vgpo" path="res://Resources/Abilities/StatusEffects/speed_reduction_tick.tres" id="2_cbs10"]
+
+[resource]
+script = ExtResource("1_60k6y")
+name = "Frost"
+description = "Speed reduced by 50% for 3 turns"
+duration = 3
+trigger_type = 0
+ability = ExtResource("2_cbs10")
+effect_behavior = 0
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 0

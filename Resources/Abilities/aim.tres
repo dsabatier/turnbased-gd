@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=2 format=3 uid="uid://c84pwkbbfn32s"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_jwk18"]
+
+[resource]
+script = ExtResource("1_jwk18")
+name = "Aim"
+power = 0
+target_type = 2
+description = "Carefully aim your next shot to restore MP"
+effect_type = 3
+custom_message = "{user} takes a moment to steady their aim..."
+mp_cost = 0
+damage_type = 0
+additional_effects = Array[Resource]([])
+apply_all_effects = true

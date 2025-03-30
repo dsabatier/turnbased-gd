@@ -1,0 +1,20 @@
+[gd_resource type="Resource" script_class="CombatantResource" load_steps=5 format=3 uid="uid://cpy1gnqfb8lam"]
+
+[ext_resource type="Script" path="res://Scripts/CombatantResource.gd" id="1_12dfj"]
+[ext_resource type="Resource" uid="uid://d2ec0qcv4d0jg" path="res://Resources/Abilities/fire_breath.tres" id="2_x4fgw"]
+[ext_resource type="Resource" uid="uid://blyt67tv2f27u" path="res://Resources/Abilities/tail_swipe.tres" id="3_a2qsf"]
+[ext_resource type="Resource" uid="uid://d1jgdfe4wtbp3" path="res://Resources/Abilities/inferno_ability.tres" id="4_8y7mq"]
+
+[resource]
+script = ExtResource("1_12dfj")
+name = "Dragon"
+display_name = "Ancient Dragon"
+is_player = false
+max_hp = 200
+max_mp = 100
+physical_attack = 20
+magic_attack = 20
+physical_defense = 20
+magic_defense = 20
+speed = 10
+abilities = Array[Resource]([ExtResource("2_x4fgw"), ExtResource("3_a2qsf"), ExtResource("4_8y7mq")])

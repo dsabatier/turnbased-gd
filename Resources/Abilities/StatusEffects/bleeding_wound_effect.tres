@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=3 format=3 uid="uid://c1k82rfk3agkr"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_kcsra"]
+[ext_resource type="Resource" uid="uid://bnhjp5d0dlvnm" path="res://Resources/Abilities/bleeding_wound_tick.tres" id="2_gj1yd"]
+
+[resource]
+script = ExtResource("1_kcsra")
+name = "Bleeding Wound"
+description = "Taking 6 damage at the end of each turn for 3 turns"
+duration = 3
+trigger_type = 1
+ability = ExtResource("2_gj1yd")
+effect_behavior = 0
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 0

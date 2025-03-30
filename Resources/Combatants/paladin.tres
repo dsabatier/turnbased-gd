@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatantResource" load_steps=6 format=3 uid="uid://c7v2g4hkrqh4l"]
+
+[ext_resource type="Script" path="res://Scripts/CombatantResource.gd" id="1_3cq1e"]
+[ext_resource type="Resource" uid="uid://dclxnujjx3r41" path="res://Resources/Abilities/holy_strike.tres" id="2_d2x6u"]
+[ext_resource type="Resource" uid="uid://btaklw11hbwvv" path="res://Resources/Abilities/divine_shield.tres" id="3_hpmto"]
+[ext_resource type="Resource" uid="uid://dx2h1o4yfcyya" path="res://Resources/Abilities/lay_on_hands.tres" id="4_pj5uk"]
+[ext_resource type="Resource" uid="uid://bjb3afyx23pny" path="res://Resources/Abilities/righteous_fury.tres" id="5_thmka"]
+
+[resource]
+script = ExtResource("1_3cq1e")
+name = "Paladin"
+display_name = "Paladin"
+is_player = true
+max_hp = 110
+max_mp = 70
+physical_attack = 15
+magic_attack = 12
+physical_defense = 15
+magic_defense = 12
+speed = 8
+abilities = Array[Resource]([ExtResource("2_d2x6u"), ExtResource("3_hpmto"), ExtResource("4_pj5uk"), ExtResource("5_thmka")])

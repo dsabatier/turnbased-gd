@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=2 format=3 uid="uid://dt5ehcuqt1j80"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_mcf8u"]
+
+[resource]
+script = ExtResource("1_mcf8u")
+name = "Meditation"
+power = 15
+target_type = 2
+description = "Enters a meditative state, restoring HP and MP"
+effect_type = 1
+custom_message = "{user} enters a meditative trance, restoring {power} HP and MP!"
+mp_cost = 0
+damage_type = 0
+additional_effects = Array[Resource]([])
+apply_all_effects = true

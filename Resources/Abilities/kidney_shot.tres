@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=2 format=3 uid="uid://d3y0rrbm2hd30"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_fvpjp"]
+
+[resource]
+script = ExtResource("1_fvpjp")
+name = "Kidney Shot"
+power = 15
+target_type = 0
+description = "A critical strike to a vital area that bypasses defenses"
+effect_type = 0
+custom_message = "{user} strikes {target}'s weak point for {power} damage!"
+mp_cost = 15
+damage_type = 2
+additional_effects = Array[Resource]([])
+apply_all_effects = true

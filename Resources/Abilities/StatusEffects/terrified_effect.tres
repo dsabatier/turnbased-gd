@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="StatusEffectResource" load_steps=3 format=3 uid="uid://dswwv4yg5jt3a"]
+
+[ext_resource type="Script" path="res://Scripts/StatusEffectResource.gd" id="1_a7l5m"]
+[ext_resource type="Resource" uid="uid://dvvxoyw2sgkur" path="res://Resources/Abilities/terrified_effect_tick.tres" id="2_o5prm"]
+
+
+[resource]
+script = ExtResource("1_a7l5m")
+name = "Terrified"
+description = "Reduces attack and magic by 25% for 3 turns"
+duration = 3
+trigger_type = 0
+ability = ExtResource("2_o5prm")
+effect_behavior = 0
+expiry_behavior = 0
+stacking_behavior = 1
+damage_reduction_percent = 0
