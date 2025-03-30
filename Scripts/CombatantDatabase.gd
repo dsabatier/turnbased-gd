@@ -16,6 +16,8 @@ func load_ability_from_resource(path: String) -> Ability:
 	var resource = load(path)
 	if resource is AbilityResource:
 		return resource.create_ability_instance()
+
+	printerr("Failed to load ability from resource: " + path)
 	return null
 
 func create_default_combatants() -> void:

@@ -106,6 +106,7 @@ func find_existing_effect(target: Combatant) -> StatusEffect:
     return null
 
 # Updated trigger method to handle different behaviors
+# Updated trigger method with null checks
 func trigger(damage = null):
     if remaining_turns <= 0:
         return ""
@@ -115,14 +116,30 @@ func trigger(damage = null):
     match effect_behavior:
         EffectBehavior.APPLY_ABILITY:
             if ability != null:
-                result = ability.execute(source_combatant, target_combatant)
+                # Make sure source and target combatants are valid
+                if source_combatant != null and target_combatant != null:
+                    result = ability.execute(source_combatant, target_combatant)
+                else:
+                    # Handle missing combatants gracefully
+                    var source_name = source_combatant.name if source_combatant else "Unknown"
+                    var target_name = target_combatant.name if target_combatant else "Unknown"
+                    result = "Effect failed: missing source or target combatant"
+            else:
+                result = "Effect has no ability to apply"
+                
         EffectBehavior.REDUCE_DAMAGE:
             # For damage reduction, we'll modify the input damage parameter
             if damage != null:
                 var reduction = int(float(damage) * (damage_reduction_percent / 100.0))
                 var reduced_damage = max(damage - reduction, 0)
+                
+                # Handle potential null target
+                var target_name = "Unknown"
+                if target_combatant != null:
+                    target_name = target_combatant.display_name
+                
                 result = "%s's %s reduced damage from %d to %d!" % [
-                    target_combatant.display_name, 
+                    target_name, 
                     name, 
                     damage, 
                     reduced_damage
@@ -135,19 +152,26 @@ func trigger(damage = null):
     # Check if effect has expired
     if remaining_turns <= 0:
         # Get display name with proper fallbacks
-        var target_name = target_combatant.display_name
+        var target_name = "Unknown"
+        if target_combatant != null:
+            target_name = target_combatant.display_name
+            
         var expiry_message = "%s has worn off from %s!" % [name, target_name]
         
         # Handle expiry behavior
         if expiry_behavior == ExpiryBehavior.APPLY_ABILITY and expiry_ability != null:
-            var expiry_result = expiry_ability.execute(source_combatant, target_combatant)
-            expiry_message += "\n" + expiry_result
+            # Make sure source and target combatants are valid
+            if source_combatant != null and target_combatant != null:
+                var expiry_result = expiry_ability.execute(source_combatant, target_combatant)
+                expiry_message += "\n" + expiry_result
+            else:
+                expiry_message += "\nCouldn't apply expiry effect due to missing combatants"
         
         emit_signal("effect_expired", self)
         return result + "\n" + expiry_message
     
     return result
-
+    
 # Method specifically for damage reduction effects 
 func reduce_damage(damage_amount):
     if effect_behavior != EffectBehavior.REDUCE_DAMAGE:

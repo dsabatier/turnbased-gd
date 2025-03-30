@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="AbilityResource" load_steps=2 format=3 uid="uid://bsnvamjg5mkyh"]
+
+[ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_ejaqs"]
+
+[resource]
+script = ExtResource("1_ejaqs")
+name = "Heavy Strike"
+power = 20
+target_type = 0
+description = "A ball of fire that deals magical damage to a single target"
+effect_type = 0
+custom_message = "{user} conjures a fierce fireball that engulfs {target} for {power} damage!"
+mp_cost = 15
+damage_type = 0
+additional_effects = Array[Resource]([])
+apply_all_effects = true

@@ -120,8 +120,21 @@ func process_turn(ability_index: int, target_combatant: Combatant = null) -> voi
 		call_deferred("process_next_turn")
 
 # Process a CPU turn automatically
+# Process a CPU turn automatically - Updated with null checks
 func process_cpu_turn() -> void:
+	# Safety check for valid turn index
+	if current_turn_index < 0 or current_turn_index >= turn_order.size():
+		print("Invalid turn index: " + str(current_turn_index))
+		process_next_turn()
+		return
+		
 	var current_combatant = turn_order[current_turn_index]
+	
+	# Safety check for null combatant
+	if current_combatant == null:
+		print("Null combatant at turn index: " + str(current_turn_index))
+		process_next_turn()
+		return
 	
 	if current_combatant.is_defeated:
 		add_log("%s is defeated and cannot act!" % current_combatant.name)
@@ -129,6 +142,10 @@ func process_cpu_turn() -> void:
 		return
 
 	process_status_effects(current_combatant, StatusEffect.TriggerType.TURN_START)
+	
+	# Check if combat ended after status effects
+	if check_combat_status():
+		return
 	
 	var friendlies = cpu_combatants if current_combatant.is_player == false else player_combatants
 	var enemies = player_combatants if current_combatant.is_player == false else cpu_combatants
@@ -138,22 +155,37 @@ func process_cpu_turn() -> void:
 	if action == null:
 		add_log("%s couldn't find a valid action!" % current_combatant.name)
 	else:
-		# Special handling for the Skip Turn ability to restore MP
-		var ability = current_combatant.abilities[action.ability]
-		if ability.name.begins_with("Skip") or ability.name.begins_with("Meditate"):
-			# Restore some MP when skipping a turn
-			var mp_restore = 15
-			current_combatant.restore_mp(mp_restore)
-			add_log("%s meditates and restores %d MP!" % [current_combatant.display_name, mp_restore])
-			
-		var result = current_combatant.use_ability(action.ability, action.target)
-		add_log(result)
+		# Validate the ability index
+		var ability_index = action.ability
+		if ability_index < 0 or ability_index >= current_combatant.abilities.size():
+			add_log("%s tried to use an invalid ability!" % current_combatant.name)
+		else:
+			# Validate the target
+			var target = action.target
+			if target == null:
+				add_log("%s couldn't find a valid target!" % current_combatant.name)
+			else:
+				# Check that ability exists
+				var ability = current_combatant.abilities[ability_index]
+				if ability == null:
+					add_log("%s tried to use a null ability!" % current_combatant.name)
+				else:
+					# Special handling for the Skip Turn ability to restore MP
+					if ability.name.begins_with("Skip") or ability.name.begins_with("Meditate"):
+						# Restore some MP when skipping a turn
+						var mp_restore = 15
+						current_combatant.restore_mp(mp_restore)
+						add_log("%s meditates and restores %d MP!" % [current_combatant.display_name, mp_restore])
+						
+					var result = current_combatant.use_ability(ability_index, target)
+					add_log(result)
 	
 	process_status_effects(current_combatant, StatusEffect.TriggerType.TURN_END)
 
+	# Check if combat ended after actions and status effects
 	if not check_combat_status():
 		process_next_turn()
-
+		
 # Process status effects of a specific trigger type
 func process_status_effects(combatant: Combatant, trigger_type: int) -> void:
 	if combatant.is_defeated:
