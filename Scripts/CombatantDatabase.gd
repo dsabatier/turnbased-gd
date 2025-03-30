@@ -36,6 +36,30 @@ func create_default_combatants() -> void:
 	wizard.current_hp = 70
 	wizard.speed = 10
 	wizard.is_player = true
+
+	var explosion_damage = AbilityFactory.create_damage_ability(
+    "Explosion", 
+    15, 
+    Ability.TargetType.ENEMY, 
+    "An explosion of fire",
+    "{target} is engulfed in a fiery explosion for {power} damage!")
+
+	# Now create a status effect that applies this damage when it expires
+	var fire_trap = AbilityFactory.create_status_effect_with_expiry(
+		"Fire Trap",
+		3,  # Duration of 3 turns
+		Ability.TargetType.ENEMY,
+		"Target is surrounded by magical fire that will explode after 3 turns",
+		StatusEffect.TriggerType.TURN_END,  # Trigger at end of turn
+		AbilityFactory.create_dot_ability("Burning", 5, 1, Ability.TargetType.ENEMY, "Burns for 5 damage"),  # Applied each turn
+		explosion_damage,  # Applied when effect expires
+		StatusEffect.StackingBehavior.REPLACE,  # Replace if already applied
+		"{user} surrounds {target} with a ring of fire that will explode in {duration} turns!"
+	)
+
+	# Add this ability to the Wizard
+	wizard.abilities.append(fire_trap)
+
 	wizard.abilities = [
 		AbilityFactory.create_damage_ability("Fireball", 20, Ability.TargetType.ENEMY, "A ball of fire"),
 		AbilityFactory.create_dot_ability("Poison", 8, 3, Ability.TargetType.ENEMY, "Poisons enemy for 3 turns"),
