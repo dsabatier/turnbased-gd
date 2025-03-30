@@ -65,8 +65,14 @@ func check_combat_status() -> bool:
 
 # Process a turn for the current combatant
 func process_turn(ability_index: int, target_combatant: Combatant = null) -> void:
-	var current_combatant = turn_order[current_turn_index]
 	
+	var current_combatant = turn_order[current_turn_index]
+
+	# Debug output
+	print("Processing turn: Combatant=" + current_combatant.display_name + ", Ability Index=" + str(ability_index))
+	if target_combatant:
+		print("Target=" + target_combatant.display_name)
+
 	# Process start-of-turn status effects
 	process_status_effects(current_combatant, StatusEffect.TriggerType.TURN_START)
 	
@@ -99,7 +105,9 @@ func process_turn(ability_index: int, target_combatant: Combatant = null) -> voi
 	
 	# Check if combat has ended after status effects
 	if not check_combat_status():
-		process_next_turn()
+		# We need to make sure we call process_next_turn with a slight delay
+		# This ensures UI gets updated and signals are processed properly
+		call_deferred("process_next_turn")
 
 # Process a CPU turn automatically
 func process_cpu_turn() -> void:
@@ -150,6 +158,7 @@ func process_status_effects(combatant: Combatant, trigger_type: int) -> void:
 
 # Move to the next turn in order
 func process_next_turn() -> void:
+	print("Processing next turn, current index: " + str(current_turn_index))
 	current_turn_index = (current_turn_index + 1) % turn_order.size()
 	
 	# If we've gone through all combatants, start a new round
@@ -159,13 +168,29 @@ func process_next_turn() -> void:
 		emit_signal("round_started", round_number)
 	
 	var current_combatant = turn_order[current_turn_index]
-	emit_signal("turn_started", current_combatant)
 	
-	# If it's a CPU turn, automatically process it
+	# Skip defeated combatants
+	if current_combatant.is_defeated:
+		print("Skipping defeated combatant: " + current_combatant.display_name)
+		# Call self again to move to the next combatant
+		call_deferred("process_next_turn")
+		return
+	
+	# Emit turn started signal with a slight delay to ensure UI is ready
+	call_deferred("emit_signal", "turn_started", current_combatant)
+	
+	print("Next turn is for: " + current_combatant.display_name + " at index: " + str(current_turn_index))
+	
+	# If it's a CPU turn, automatically process it after a delay
 	if not current_combatant.is_player:
+		print("CPU turn - waiting before processing")
 		# Add a small delay before CPU acts for better visual flow
-		await get_tree().create_timer(0.5).timeout
-		process_cpu_turn()
+		call_deferred("_process_cpu_turn_with_delay")
+
+# Add a helper function to process CPU turns with a delay
+func _process_cpu_turn_with_delay():
+	await get_tree().create_timer(0.8).timeout
+	process_cpu_turn()
 
 func add_log(message: String) -> void:
 	logs.append(message)

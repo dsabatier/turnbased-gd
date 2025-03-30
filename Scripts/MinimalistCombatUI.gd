@@ -12,38 +12,24 @@ extends Control
 @onready var target_container = $TargetPopup/TargetContainer
 @onready var target_title = $TargetPopup/TitleBar/TitleLabel
 @onready var log_text = $CombatLogWindow/LogText
+@onready var player_container = $BattleArea/PlayerContainer
+@onready var enemy_container = $BattleArea/EnemyContainer
 
-# Player and enemy status elements
-var player_status_elements = []
-var enemy_status_elements = []
+# Scene references
+const CombatantViewScene = preload("res://Scenes/combatant_view.tscn")
+
+# References to combatant views
+var player_views = []
+var enemy_views = []
 
 # Track current combat state
 var selected_ability = -1
 var current_combatant = null
-var highlight_style = null
 
 func _ready():
-	# Connect signals from combat system
-	combat_system.combat_log_updated.connect(_on_combat_log_updated)
-	combat_system.turn_started.connect(_on_turn_started)
-	combat_system.combat_ended.connect(_on_combat_ended)
-	combat_system.combat_started.connect(_on_combat_started)
-	
 	# Set up log toggle button
 	$LogToggleButton.pressed.connect(_toggle_combat_log)
 	$CombatLogWindow/CloseButton.pressed.connect(_close_combat_log)
-	
-	# Create highlight style
-	highlight_style = StyleBoxFlat.new()
-	highlight_style.bg_color = Color(0, 0, 0, 0)  # Transparent background
-	highlight_style.border_width_left = 2
-	highlight_style.border_width_top = 2
-	highlight_style.border_width_right = 2
-	highlight_style.border_width_bottom = 2
-	highlight_style.border_color = Color(1, 1, 0, 0.8)  # Yellow highlight
-	
-	# Initialize combatant status elements
-	_initialize_status_elements()
 	
 	# Initialize with all popups hidden
 	combat_log_window.visible = false
@@ -55,92 +41,65 @@ func _ready():
 	$ButtonContainer/BackToSelectionButton.pressed.connect(return_to_selection)
 	
 	log_text.text = "Waiting for combat to start...\n"
-
-func _initialize_status_elements():
-	# Initialize player status elements
-	player_status_elements.clear()
-	for i in range(4):  # Up to 4 players
-		var element = _get_status_element("BattleArea/PlayerStatus/Player" + str(i+1))
-		if element:
-			player_status_elements.append(element)
 	
-	# Initialize enemy status elements
-	enemy_status_elements.clear()
-	for i in range(10):  # Up to 10 enemies
-		var element = _get_status_element("BattleArea/EnemyStatus/Enemy" + str(i+1))
-		if element:
-			enemy_status_elements.append(element)
+	# We'll connect the signals once the combat_system is properly set
+	call_deferred("_connect_combat_signals")
 
-func _get_status_element(path):
-	# Helper function to get status UI elements
-	var node = get_node_or_null(path)
-	if node:
-		return {
-			"container": node,
-			"portrait": node.get_node_or_null("Portrait"),
-			"name_label": node.get_node_or_null("NameLabel"),
-			"hp_bar": node.get_node_or_null("HPBar"),
-			"hp_label": node.get_node_or_null("HPBar/Label") if node.get_node_or_null("HPBar") else null,
-			"mp_bar": node.get_node_or_null("MPBar"),
-			"mp_label": node.get_node_or_null("MPBar/Label") if node.get_node_or_null("MPBar") else null,
-			"status_effects": node.get_node_or_null("StatusEffects"),
-			"highlight": node.get_node_or_null("Highlight"),
-			"combatant": null
-		}
-	return null
+func _connect_combat_signals():
+	# Safety check - make sure combat_system exists before connecting signals
+	if combat_system:
+		# Connect signals from combat system
+		if not combat_system.is_connected("combat_log_updated", _on_combat_log_updated):
+			combat_system.combat_log_updated.connect(_on_combat_log_updated)
+		
+		if not combat_system.is_connected("turn_started", _on_turn_started):
+			combat_system.turn_started.connect(_on_turn_started)
+		
+		if not combat_system.is_connected("combat_ended", _on_combat_ended):
+			combat_system.combat_ended.connect(_on_combat_ended)
+		
+		if not combat_system.is_connected("combat_started", _on_combat_started):
+			combat_system.combat_started.connect(_on_combat_started)
+		
+		print("Combat signals connected successfully")
+	else:
+		print("WARNING: combat_system is null, signals not connected")
+		# Try again after a short delay
+		await get_tree().create_timer(0.5).timeout
+		_connect_combat_signals()
 
 func _on_combat_started():
-	# Set up player UI
-	for i in range(min(combat_system.player_combatants.size(), player_status_elements.size())):
-		var element = player_status_elements[i]
-		var combatant = combat_system.player_combatants[i]
-		element.container.visible = true
-		element.combatant = combatant
-		element.name_label.text = combatant.display_name
-		
-		# Connect signals
-		if not combatant.hp_changed.is_connected(_on_player_hp_changed):
-			combatant.hp_changed.connect(_on_player_hp_changed.bind(i))
-		if not combatant.mp_changed.is_connected(_on_player_mp_changed):
-			combatant.mp_changed.connect(_on_player_mp_changed.bind(i))
-		if not combatant.status_effect_added.is_connected(_on_player_status_changed):
-			combatant.status_effect_added.connect(_on_player_status_changed.bind(i))
-		if not combatant.status_effect_removed.is_connected(_on_player_status_changed):
-			combatant.status_effect_removed.connect(_on_player_status_changed.bind(i))
-		
-		# Update display
-		_update_player_status(i)
+	# Safety check
+	if not combat_system:
+		push_error("Combat system is null in _on_combat_started")
+		return
 	
-	# Hide unused player elements
-	for i in range(combat_system.player_combatants.size(), player_status_elements.size()):
-		player_status_elements[i].container.visible = false
+	# Clear existing views
+	for child in player_container.get_children():
+		child.queue_free()
+	for child in enemy_container.get_children():
+		child.queue_free()
 	
-	# Set up enemy UI
-	for i in range(min(combat_system.cpu_combatants.size(), enemy_status_elements.size())):
-		var element = enemy_status_elements[i]
-		var combatant = combat_system.cpu_combatants[i]
-		element.container.visible = true
-		element.combatant = combatant
-		element.name_label.text = combatant.display_name
-		
-		# Connect signals
-		if not combatant.hp_changed.is_connected(_on_enemy_hp_changed):
-			combatant.hp_changed.connect(_on_enemy_hp_changed.bind(i))
-		if not combatant.mp_changed.is_connected(_on_enemy_mp_changed):
-			combatant.mp_changed.connect(_on_enemy_mp_changed.bind(i))
-		if not combatant.status_effect_added.is_connected(_on_enemy_status_changed):
-			combatant.status_effect_added.connect(_on_enemy_status_changed.bind(i))
-		if not combatant.status_effect_removed.is_connected(_on_enemy_status_changed):
-			combatant.status_effect_removed.connect(_on_enemy_status_changed.bind(i))
-		if not combatant.defeated.is_connected(_on_enemy_defeated):
-			combatant.defeated.connect(_on_enemy_defeated.bind(i))
-		
-		# Update display
-		_update_enemy_status(i)
+	player_views.clear()
+	enemy_views.clear()
 	
-	# Hide unused enemy elements
-	for i in range(combat_system.cpu_combatants.size(), enemy_status_elements.size()):
-		enemy_status_elements[i].container.visible = false
+	# Create views for player combatants
+	for combatant in combat_system.player_combatants:
+		var view = CombatantViewScene.instantiate()
+		player_container.add_child(view)
+		view.setup(combatant, true)
+		view.clicked.connect(_on_player_combatant_clicked)
+		player_views.append(view)
+		print("Added player view for: " + combatant.display_name)
+	
+	# Create views for enemy combatants
+	for combatant in combat_system.cpu_combatants:
+		var view = CombatantViewScene.instantiate()
+		enemy_container.add_child(view)
+		view.setup(combatant, false)
+		view.clicked.connect(_on_enemy_combatant_clicked)
+		enemy_views.append(view)
+		print("Added enemy view for: " + combatant.display_name)
 	
 	log_text.text = "Combat started!\n"
 	
@@ -152,97 +111,99 @@ func _on_combat_started():
 		if first_combatant.is_player:
 			_show_abilities_for_combatant(first_combatant)
 
-func _update_player_status(index):
-	if index < 0 or index >= player_status_elements.size():
-		return
+func _on_player_combatant_clicked(combatant_view):
+	# Debug output
+	print("Player combatant clicked: " + combatant_view.combatant.display_name)
+	
+	# Only process click if we're selecting a target for an ability
+	if selected_ability >= 0 and current_combatant and current_combatant.is_player:
+		var ability = current_combatant.abilities[selected_ability]
 		
-	var element = player_status_elements[index]
-	var combatant = element.combatant
-	
-	if not combatant:
-		return
-	
-	# Update HP
-	var hp_ratio = float(combatant.current_hp) / float(combatant.max_hp)
-	element.hp_bar.value = hp_ratio * 100
-	element.hp_label.text = str(combatant.current_hp) + "/" + str(combatant.max_hp)
-	
-	# Update MP
-	var mp_ratio = float(combatant.current_mp) / float(combatant.max_mp) if combatant.max_mp > 0 else 0
-	element.mp_bar.value = mp_ratio * 100
-	element.mp_label.text = str(combatant.current_mp) + "/" + str(combatant.max_mp)
-	
-	# Update status effects
-	_update_status_effects(combatant, element.status_effects)
+		# Check if this is a valid target
+		var target_combatant = combatant_view.combatant
+		
+		if target_combatant and not target_combatant.is_defeated:
+			# Check target type compatibility
+			var is_valid_target = false
+			
+			match ability.target_type:
+				Ability.TargetType.FRIENDLY:
+					is_valid_target = target_combatant.is_player
+				Ability.TargetType.OTHER_FRIENDLY:
+					is_valid_target = target_combatant.is_player and target_combatant != current_combatant
+				Ability.TargetType.ANY:
+					is_valid_target = true
+			
+			if is_valid_target:
+				print("Executing ability: " + ability.name + " on target: " + target_combatant.display_name)
+				
+				# Apply the ability to the target
+				combat_system.process_turn(selected_ability, target_combatant)
+				
+				# Hide popups
+				target_popup.visible = false
+				ability_popup.visible = false
+				selected_ability = -1
+				
+				# Reset dimming
+				_reset_combatant_dimming()
 
-func _update_enemy_status(index):
-	if index < 0 or index >= enemy_status_elements.size():
-		return
+func _on_enemy_combatant_clicked(combatant_view):
+	# Debug output
+	print("Enemy combatant clicked: " + combatant_view.combatant.display_name)
+	
+	# Only process click if we're selecting a target for an ability
+	if selected_ability >= 0 and current_combatant and current_combatant.is_player:
+		var ability = current_combatant.abilities[selected_ability]
 		
-	var element = enemy_status_elements[index]
-	var combatant = element.combatant
-	
-	if not combatant:
-		return
-	
-	# Update HP
-	var hp_ratio = float(combatant.current_hp) / float(combatant.max_hp)
-	element.hp_bar.value = hp_ratio * 100
-	element.hp_label.text = str(combatant.current_hp) + "/" + str(combatant.max_hp)
-	
-	# Update MP if exists
-	if element.mp_bar and combatant.max_mp > 0:
-		var mp_ratio = float(combatant.current_mp) / float(combatant.max_mp)
-		element.mp_bar.value = mp_ratio * 100
-		element.mp_label.text = str(combatant.current_mp) + "/" + str(combatant.max_mp)
-	
-	# Update status effects
-	_update_status_effects(combatant, element.status_effects)
+		# Check if this is a valid target
+		var target_combatant = combatant_view.combatant
+		
+		if target_combatant and not target_combatant.is_defeated:
+			# Check target type compatibility
+			var is_valid_target = false
+			
+			match ability.target_type:
+				Ability.TargetType.ENEMY:
+					is_valid_target = !target_combatant.is_player
+				Ability.TargetType.ANY:
+					is_valid_target = true
+			
+			if is_valid_target:
+				print("Executing ability: " + ability.name + " on target: " + target_combatant.display_name)
+				
+				# Apply the ability to the target
+				combat_system.process_turn(selected_ability, target_combatant)
+				
+				# Hide popups
+				target_popup.visible = false
+				ability_popup.visible = false
+				selected_ability = -1
+				
+				# Reset dimming
+				_reset_combatant_dimming()
 
-func _update_status_effects(combatant, status_container):
-	# Clear existing status icons
-	for child in status_container.get_children():
-		child.queue_free()
-	
-	# Add icon for each status effect
-	for effect in combatant.status_effects:
-		# Determine color based on effect type
-		var color = Color.WHITE
-		
-		match effect.trigger_type:
-			StatusEffect.TriggerType.TURN_START:
-				color = Color.GREEN
-			StatusEffect.TriggerType.TURN_END:
-				color = Color.RED
-			StatusEffect.TriggerType.ON_DAMAGE_TAKEN:
-				color = Color.BLUE
-			StatusEffect.TriggerType.ON_HEALING_RECEIVED:
-				color = Color.YELLOW
-		
-		# Create status effect icon
-		var panel = Panel.new()
-		var style_box = StyleBoxFlat.new()
-		style_box.bg_color = color
-		style_box.corner_radius_top_left = 4
-		style_box.corner_radius_top_right = 4
-		style_box.corner_radius_bottom_left = 4
-		style_box.corner_radius_bottom_right = 4
-		
-		panel.add_theme_stylebox_override("panel", style_box)
-		panel.custom_minimum_size = Vector2(8, 8)
-		panel.tooltip_text = effect.name + " (" + str(effect.remaining_turns) + " turns)"
-		
-		status_container.add_child(panel)
+func _reset_combatant_dimming():
+	# Reset visual highlights
+	for view in player_views + enemy_views:
+		view.modulate = Color(1, 1, 1, 1)
 
 func _on_combat_log_updated(message: String):
 	log_text.text += message + "\n"
+	# Make sure log scrolls to bottom
+	log_text.scroll_to_paragraph(log_text.get_paragraph_count() - 1)
 
 func _on_turn_started(combatant: Combatant):
+	print("Turn started for: " + combatant.display_name + " (is_player: " + str(combatant.is_player) + ")")
+	
 	current_combatant = combatant
 	
 	# Hide any open popups
 	ability_popup.visible = false
 	target_popup.visible = false
+	
+	# Reset visual state
+	_reset_combatant_dimming()
 	
 	# Highlight the active combatant
 	_highlight_active_combatant(combatant)
@@ -251,32 +212,27 @@ func _on_turn_started(combatant: Combatant):
 	
 	# If it's a player's turn, show abilities
 	if combatant.is_player:
-		_show_abilities_for_combatant(combatant)
+		call_deferred("_show_abilities_for_combatant", combatant)
 
 func _highlight_active_combatant(combatant):
 	# Clear all highlights first
-	for element in player_status_elements + enemy_status_elements:
-		if element.highlight:
-			element.highlight.visible = false
+	for view in player_views + enemy_views:
+		view.set_highlighted(false)
 	
 	# Find and highlight the active combatant
-	for i in range(player_status_elements.size()):
-		if player_status_elements[i].combatant == combatant:
-			var highlight = player_status_elements[i].highlight
-			if highlight:
-				highlight.add_theme_stylebox_override("panel", highlight_style)
-				highlight.visible = true
+	var found = false
+	for view in player_views + enemy_views:
+		if view.combatant == combatant:
+			view.set_highlighted(true)
+			found = true
 			break
 	
-	for i in range(enemy_status_elements.size()):
-		if enemy_status_elements[i].combatant == combatant:
-			var highlight = enemy_status_elements[i].highlight
-			if highlight:
-				highlight.add_theme_stylebox_override("panel", highlight_style)
-				highlight.visible = true
-			break
+	if not found:
+		print("WARNING: Could not find view for combatant: " + combatant.display_name)
 
 func _show_abilities_for_combatant(combatant):
+	print("Showing abilities for: " + combatant.display_name + " with " + str(combatant.abilities.size()) + " abilities")
+	
 	# Clear existing abilities
 	for child in ability_container.get_children():
 		child.queue_free()
@@ -293,6 +249,18 @@ func _show_abilities_for_combatant(combatant):
 		
 		# Create ability name text with MP cost if applicable
 		var ability_text = ability.name
+		
+		# Add damage type info if available
+		if ability.has_method("get") and ability.get("effect_type") == Ability.EffectType.DAMAGE and ability.get("damage_type") != null:
+			match ability.damage_type:
+				Ability.DamageType.PHYSICAL:
+					ability_text += " (Physical)"
+				Ability.DamageType.MAGICAL:
+					ability_text += " (Magical)"
+				Ability.DamageType.PURE:
+					ability_text += " (Pure)"
+		
+		# Add MP cost if applicable
 		if ability.has_method("get") and ability.get("mp_cost") != null and ability.mp_cost > 0:
 			ability_text += " [MP: " + str(ability.mp_cost) + "]"
 			
@@ -319,15 +287,44 @@ func _on_ability_selected(index):
 	if current_combatant and selected_ability >= 0 and selected_ability < current_combatant.abilities.size():
 		var ability = current_combatant.abilities[selected_ability]
 		
+		print("Selected ability: " + ability.name + " with target type: " + str(ability.target_type))
+		
 		# If it's a self-targeting ability, use it immediately
 		if ability.target_type == Ability.TargetType.SELF:
+			print("Executing self-targeted ability: " + ability.name)
 			combat_system.process_turn(selected_ability, current_combatant)
 			ability_popup.visible = false
 			selected_ability = -1
 			return
 		
-		# Otherwise, show target selection popup
-		_show_target_selection(ability)
+		# Visually indicate valid targets
+		_highlight_valid_targets(ability)
+		
+		# For complex target selection, show the target popup
+		if ability.target_type != Ability.TargetType.ENEMY and ability.target_type != Ability.TargetType.FRIENDLY:
+			_show_target_selection(ability)
+
+func _highlight_valid_targets(ability):
+	# Reset all highlights and modulate
+	for view in player_views + enemy_views:
+		view.modulate = Color(1, 1, 1, 1)
+	
+	# Dim invalid targets
+	match ability.target_type:
+		Ability.TargetType.ENEMY:
+			for view in player_views:
+				view.modulate = Color(0.7, 0.7, 0.7, 0.5)
+		Ability.TargetType.FRIENDLY:
+			for view in enemy_views:
+				view.modulate = Color(0.7, 0.7, 0.7, 0.5)
+		Ability.TargetType.OTHER_FRIENDLY:
+			for view in enemy_views:
+				view.modulate = Color(0.7, 0.7, 0.7, 0.5)
+			
+			# Current combatant can't be targeted with OTHER_FRIENDLY
+			for view in player_views:
+				if view.combatant == current_combatant:
+					view.modulate = Color(0.7, 0.7, 0.7, 0.5)
 
 func _show_target_selection(ability):
 	# Clear existing targets
@@ -378,6 +375,8 @@ func _show_target_selection(ability):
 
 func _on_target_selected(target):
 	if current_combatant and selected_ability >= 0:
+		print("Target selected: " + target.display_name)
+		
 		# Apply the ability to the target
 		combat_system.process_turn(selected_ability, target)
 		
@@ -385,41 +384,9 @@ func _on_target_selected(target):
 		target_popup.visible = false
 		ability_popup.visible = false
 		selected_ability = -1
-
-func _on_player_hp_changed(current_hp, max_hp, player_index):
-	_update_player_status(player_index)
-
-func _on_player_mp_changed(current_mp, max_mp, player_index):
-	_update_player_status(player_index)
-
-func _on_player_status_changed(effect, player_index):
-	_update_player_status(player_index)
-
-func _on_enemy_hp_changed(current_hp, max_hp, enemy_index):
-	_update_enemy_status(enemy_index)
-
-func _on_enemy_mp_changed(current_mp, max_mp, enemy_index):
-	_update_enemy_status(enemy_index)
-
-func _on_enemy_status_changed(effect, enemy_index):
-	_update_enemy_status(enemy_index)
-
-func _on_enemy_defeated(enemy_index):
-	if enemy_index < enemy_status_elements.size():
-		var element = enemy_status_elements[enemy_index]
 		
-		# Gray out the enemy display
-		var portrait = element.portrait
-		if portrait:
-			portrait.modulate = Color(0.5, 0.5, 0.5, 0.7)
-		
-		var name_label = element.name_label
-		if name_label:
-			name_label.modulate = Color(0.5, 0.5, 0.5, 0.7)
-		
-		var hp_bar = element.hp_bar
-		if hp_bar:
-			hp_bar.modulate = Color(0.5, 0.5, 0.5, 0.7)
+		# Reset visual highlights
+		_reset_combatant_dimming()
 
 func _on_combat_ended(winner: String):
 	# Hide all popups

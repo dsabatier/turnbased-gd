@@ -1,0 +1,120 @@
+[gd_scene load_steps=3 format=3 uid="uid://ptfh1gpjt0f2"]
+
+[ext_resource type="Script" path="res://Scripts/CombatantView.gd" id="1_0jh4u"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_w3n6k"]
+bg_color = Color(1, 0.85098, 0, 0.2)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.847059, 0, 0.8)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[node name="CombatantView" type="PanelContainer"]
+custom_minimum_size = Vector2(200, 80)
+offset_right = 200.0
+offset_bottom = 80.0
+script = ExtResource("1_0jh4u")
+
+[node name="Highlight" type="Panel" parent="."]
+visible = false
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_w3n6k")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Portrait" type="ColorRect" parent="MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 2
+size_flags_vertical = 0
+color = Color(0.211765, 0.411765, 0.831373, 1)
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="NameLabel" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+text = "Combatant Name"
+
+[node name="HPContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Label" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/HPContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "HP:"
+
+[node name="HPBar" type="ProgressBar" parent="MarginContainer/HBoxContainer/VBoxContainer/HPContainer"]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+value = 75.0
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/HPContainer/HPBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 10
+text = "75/100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="MPContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Label" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/MPContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "MP:"
+
+[node name="MPBar" type="ProgressBar" parent="MarginContainer/HBoxContainer/VBoxContainer/MPContainer"]
+modulate = Color(0.219608, 0.521569, 1, 1)
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+value = 50.0
+show_percentage = false
+
+[node name="MPLabel" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/MPContainer/MPBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 10
+text = "50/100"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StatusEffectsContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Label" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer/StatusEffectsContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Status:"
+
+[node name="StatusEffects" type="HBoxContainer" parent="MarginContainer/HBoxContainer/VBoxContainer/StatusEffectsContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4

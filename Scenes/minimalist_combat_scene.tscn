@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=3 uid="uid://c32w4o3ilcb2g"]
 
-[ext_resource type="PackedScene" uid="uid://cbw2iwwnpt0l0" path="res://Scenes/minimalist_combat.tscn" id="1_6u4hd"]
+[ext_resource type="PackedScene" uid="uid://dl6puxgu6h06a" path="res://Scenes/minimalist_combat.tscn" id="1_6u4hd"]
 [ext_resource type="Script" path="res://Scripts/MinimalistCombatMain.gd" id="1_x3tmq"]
 
 [node name="MinimalistCombatScene" type="Node"]

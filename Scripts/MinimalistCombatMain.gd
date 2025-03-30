@@ -1,24 +1,14 @@
 # MinimalistCombatMain.gd
 extends Node
 
-@onready var combat_system = $MinimalistCombat/CombatSystem
 @onready var combat_ui = $MinimalistCombat
-
-# MinimalistCombatMain.gd
-extends Node
-
-var combat_system
-var combat_ui
+@onready var combat_system = $MinimalistCombat/CombatSystem
 
 func _ready() -> void:
-	# Setup a delay to ensure all nodes are initialized
+	# Wait for one frame to ensure all nodes are initialized
 	await get_tree().process_frame
 	
-	# Make sure to get node references after the scene is fully loaded
-	combat_ui = $MinimalistCombat
-	combat_system = $MinimalistCombat/CombatSystem
-	
-	# Ensure references are valid
+	# Safety check for node references
 	if not combat_system:
 		push_error("Failed to find CombatSystem node")
 		return
@@ -26,16 +16,44 @@ func _ready() -> void:
 	if not combat_ui:
 		push_error("Failed to find MinimalistCombat node")
 		return
+	
+	# Set up combat system reference on UI
+	if combat_ui:
+		print("Setting combat_system on combat_ui")
+		combat_ui.combat_system = combat_system
+	else:
+		push_error("combat_ui reference is null")
+	
+	# Check if we're coming from character selection
+	if CombatantDatabase.get_selected_party().size() > 0 and CombatantDatabase.get_selected_enemies().size() > 0:
+		# Use the selected combatants
+		setup_selected_combatants()
+	else:
+		# Create example combatants for testing
+		var combatants = create_example_combatants()
 		
-	# Manually set the combat system on the UI if needed
-	if combat_ui.has_method("set_combat_system"):
-		combat_ui.set_combat_system(combat_system)
+		# Add all combatants as children
+		for combatant in combatants:
+			add_child(combatant)
+			
+		# Make sure combatants are properly initialized
+		for combatant in combatants:
+			combatant._ready()
 		
-	# Check if we're coming from the character selection screen
+		# Register first 3 combatants as players, rest as enemies
+		combat_system.player_combatants = combatants.slice(0, 3)
+		combat_system.cpu_combatants = combatants.slice(3)
+	
+	# Start the combat
+	combat_system.start()
 
 func setup_selected_combatants() -> void:
 	var player_combatants: Array[Combatant] = CombatantDatabase.get_selected_party()
 	var enemy_combatants: Array[Combatant] = CombatantDatabase.get_selected_enemies()
+	
+	# Debug: Output combatant information
+	print("Player combatants: ", player_combatants.size())
+	print("Enemy combatants: ", enemy_combatants.size())
 	
 	# Ensure all combatants have the correct is_player value
 	for combatant in player_combatants:
@@ -54,8 +72,8 @@ func setup_selected_combatants() -> void:
 	combat_system.player_combatants = player_combatants
 	combat_system.cpu_combatants = enemy_combatants
 
-# Example of creating combatants with special abilities for testing
-func create_example_combatants() -> Array[Combatant]:
+    # Example of creating combatants with special abilities for testing
+func create_example_combatants() -> Array:
 	# Create a warrior
 	var warrior: Combatant = Combatant.new()
 	warrior.name = "Warrior"
@@ -218,7 +236,7 @@ func create_example_combatants() -> Array[Combatant]:
 	spider.name = "Giant Spider"
 	spider.display_name = "Giant Spider"
 	spider.max_hp = 75
-	spider.current_hp = 70
+	spider.current_hp = 75
 	spider.max_mp = 40
 	spider.current_mp = 40
 	spider.physical_attack = 12

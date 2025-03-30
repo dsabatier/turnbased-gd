@@ -1,3 +1,164 @@
-[gd_scene format=3 uid="uid://cbw2iwwnpt0l0"]
+[gd_scene load_steps=4 format=3 uid="uid://dl6puxgu6h06a"]
 
-[node name="MinimalistCombatMain" type="Node2D"]
+[ext_resource type="Script" path="res://Scripts/MinimalistCombatUI.gd" id="1_5xwbp"]
+[ext_resource type="Script" path="res://Scripts/CombatSystem.gd" id="2_wy5g1"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jgks7"]
+bg_color = Color(0.0784314, 0.0784314, 0.0784314, 0.784314)
+
+[node name="MinimalistCombat" type="Control" node_paths=PackedStringArray("combat_system")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_5xwbp")
+combat_system = NodePath("CombatSystem")
+
+[node name="CombatSystem" type="Node" parent="."]
+script = ExtResource("2_wy5g1")
+
+[node name="BattleArea" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PlayerContainer" type="VBoxContainer" parent="BattleArea"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 4
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="EnemyContainer" type="VBoxContainer" parent="BattleArea"]
+custom_minimum_size = Vector2(200, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 4
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="AbilityPopup" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -250.0
+offset_right = 150.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="TitleBar" type="PanelContainer" parent="AbilityPopup"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TitleLabel" type="Label" parent="AbilityPopup/TitleBar"]
+layout_mode = 2
+text = "Choose an Ability"
+horizontal_alignment = 1
+
+[node name="AbilityContainer" type="VBoxContainer" parent="AbilityPopup"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="TargetPopup" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -150.0
+offset_top = -125.0
+offset_right = 150.0
+offset_bottom = 125.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TitleBar" type="PanelContainer" parent="TargetPopup"]
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="TitleLabel" type="Label" parent="TargetPopup/TitleBar"]
+layout_mode = 2
+text = "Select Target"
+horizontal_alignment = 1
+
+[node name="TargetContainer" type="VBoxContainer" parent="TargetPopup"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="CombatLogWindow" type="PanelContainer" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -150.0
+offset_right = 250.0
+offset_bottom = 150.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_jgks7")
+
+[node name="LogText" type="RichTextLabel" parent="CombatLogWindow"]
+layout_mode = 2
+bbcode_enabled = true
+scroll_following = true
+
+[node name="CloseButton" type="Button" parent="CombatLogWindow"]
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+text = "X"
+
+[node name="LogToggleButton" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -40.0
+offset_right = -20.0
+offset_bottom = -10.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "Combat Log"
+
+[node name="ButtonContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -60.0
+offset_right = 300.0
+offset_bottom = -20.0
+grow_vertical = 0
+theme_override_constants/separation = 20
+
+[node name="BackToMenuButton" type="Button" parent="ButtonContainer"]
+layout_mode = 2
+text = "Main Menu"
+
+[node name="BackToSelectionButton" type="Button" parent="ButtonContainer"]
+layout_mode = 2
+text = "Character Selection"

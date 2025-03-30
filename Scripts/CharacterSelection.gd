@@ -241,7 +241,6 @@ func _on_start_battle_button_pressed() -> void:
 	ui_dialog.title = "Select UI Style"
 	ui_dialog.dialog_text = "Please select a UI style for combat:"
 	ui_dialog.add_button("Classic UI", true, "classic_ui")
-	#ui_dialog.add_button("Modern UI", true, "modern_ui")
 	ui_dialog.add_button("Minimalist UI", true, "minimalist_ui")
 	
 	ui_dialog.custom_action.connect(func(action):
@@ -250,9 +249,6 @@ func _on_start_battle_button_pressed() -> void:
 		if action == "classic_ui":
 			# Change to the classic main scene
 			get_tree().change_scene_to_file("res://Scenes/main.tscn")
-		elif action == "modern_ui":
-			# Change to the modern UI scene
-			get_tree().change_scene_to_file("res://Scenes/modern_combat_scene.tscn")
 		elif action == "minimalist_ui":
 			# Change to the minimalist UI scene
 			get_tree().change_scene_to_file("res://Scenes/minimalist_combat_scene.tscn")
