@@ -3,13 +3,23 @@ class_name AbilityFactory
 extends Node
 
 # Create a basic damage ability
-static func create_damage_ability(name: String, power: int, target_type: int, description: String, custom_message: String = "") -> Ability:
+static func create_damage_ability(
+    name: String, 
+    power: int, 
+    target_type: int, 
+    description: String, 
+    custom_message: String = "",
+    mp_cost: int = 0,
+    damage_type: int = Ability.DamageType.PHYSICAL
+) -> Ability:
     var ability = Ability.new()
     ability.name = name
     ability.power = power
     ability.target_type = target_type
     ability.description = description
     ability.effect_type = Ability.EffectType.DAMAGE
+    ability.mp_cost = mp_cost
+    ability.damage_type = damage_type
     
     if custom_message != "":
         ability.custom_message = custom_message
@@ -17,13 +27,21 @@ static func create_damage_ability(name: String, power: int, target_type: int, de
     return ability
 
 # Create a basic healing ability
-static func create_healing_ability(name: String, power: int, target_type: int, description: String, custom_message: String = "") -> Ability:
+static func create_healing_ability(
+    name: String, 
+    power: int, 
+    target_type: int, 
+    description: String, 
+    custom_message: String = "",
+    mp_cost: int = 0
+) -> Ability:
     var ability = Ability.new()
     ability.name = name
     ability.power = power
     ability.target_type = target_type
     ability.description = description
     ability.effect_type = Ability.EffectType.HEALING
+    ability.mp_cost = mp_cost
     
     if custom_message != "":
         ability.custom_message = custom_message
@@ -31,13 +49,18 @@ static func create_healing_ability(name: String, power: int, target_type: int, d
     return ability
 
 # Create a skip turn ability
-static func create_skip_turn_ability(name: String, description: String, custom_message: String = "") -> Ability:
+static func create_skip_turn_ability(
+    name: String, 
+    description: String, 
+    custom_message: String = ""
+) -> Ability:
     var ability = Ability.new()
     ability.name = name
     ability.power = 0  # No direct effect on HP
     ability.target_type = Ability.TargetType.SELF  # Only affects the caster
     ability.description = description
     ability.effect_type = Ability.EffectType.UTILITY
+    ability.mp_cost = 0  # No MP cost for skipping
     
     if custom_message != "":
         ability.custom_message = custom_message
@@ -45,13 +68,23 @@ static func create_skip_turn_ability(name: String, description: String, custom_m
     return ability
 
 # Create a damage over time ability
-static func create_dot_ability(name: String, damage_per_tick: int, duration: int, target_type: int, description: String, custom_message: String = "") -> Ability:
+static func create_dot_ability(
+    name: String, 
+    damage_per_tick: int, 
+    duration: int, 
+    target_type: int, 
+    description: String, 
+    custom_message: String = "",
+    mp_cost: int = 0,
+    damage_type: int = Ability.DamageType.PHYSICAL
+) -> Ability:
     # First create the damage ability that will be applied on each tick
     var damage_ability = Ability.new()
     damage_ability.name = name + " (DoT)"
     damage_ability.power = damage_per_tick
     damage_ability.target_type = target_type
     damage_ability.effect_type = Ability.EffectType.DAMAGE
+    damage_ability.damage_type = damage_type
     damage_ability.custom_message = "{target} takes {power} damage from {effect}"
     
     # Create the status effect
@@ -69,6 +102,7 @@ static func create_dot_ability(name: String, damage_per_tick: int, duration: int
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
     ability.status_effect = status
+    ability.mp_cost = mp_cost
     
     # Set custom message if provided
     if custom_message != "":
@@ -77,7 +111,15 @@ static func create_dot_ability(name: String, damage_per_tick: int, duration: int
     return ability
 
 # Create a heal over time ability
-static func create_hot_ability(name: String, healing_per_tick: int, duration: int, target_type: int, description: String, custom_message: String = "") -> Ability:
+static func create_hot_ability(
+    name: String, 
+    healing_per_tick: int, 
+    duration: int, 
+    target_type: int, 
+    description: String, 
+    custom_message: String = "",
+    mp_cost: int = 0
+) -> Ability:
     # First create the healing ability that will be applied on each tick
     var healing_ability = Ability.new()
     healing_ability.name = name + " (HoT)"
@@ -100,6 +142,7 @@ static func create_hot_ability(name: String, healing_per_tick: int, duration: in
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
     ability.status_effect = status
+    ability.mp_cost = mp_cost
     
     # Set custom message if provided
     if custom_message != "":
@@ -108,7 +151,15 @@ static func create_hot_ability(name: String, healing_per_tick: int, duration: in
     return ability
 
 # Create a damage reduction ability
-static func create_damage_reduction_ability(name: String, reduction_percent: int, duration: int, target_type: int, description: String, custom_message: String = "") -> Ability:
+static func create_damage_reduction_ability(
+    name: String, 
+    reduction_percent: int, 
+    duration: int, 
+    target_type: int, 
+    description: String, 
+    custom_message: String = "",
+    mp_cost: int = 0
+) -> Ability:
     # Create the status effect for damage reduction
     var status = StatusEffect.new()
     status.name = name + " Effect"
@@ -125,6 +176,7 @@ static func create_damage_reduction_ability(name: String, reduction_percent: int
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
     ability.status_effect = status
+    ability.mp_cost = mp_cost
     
     # Set custom message if provided
     if custom_message != "":
@@ -142,7 +194,8 @@ static func create_status_effect_with_expiry(
     apply_ability: Ability,
     expiry_ability: Ability,
     stacking_behavior: int = StatusEffect.StackingBehavior.REPLACE,
-    custom_message: String = ""
+    custom_message: String = "",
+    mp_cost: int = 0
 ) -> Ability:
     # Create the status effect
     var status = StatusEffect.new()
@@ -163,6 +216,7 @@ static func create_status_effect_with_expiry(
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
     ability.status_effect = status
+    ability.mp_cost = mp_cost
     
     # Set custom message if provided
     if custom_message != "":
@@ -178,7 +232,8 @@ static func create_advanced_damage_reduction(
     target_type: int, 
     description: String,
     stacking_behavior: int = StatusEffect.StackingBehavior.REFRESH,
-    custom_message: String = ""
+    custom_message: String = "",
+    mp_cost: int = 0
 ) -> Ability:
     # Create the status effect for damage reduction
     var status = StatusEffect.new()
@@ -197,6 +252,7 @@ static func create_advanced_damage_reduction(
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
     ability.status_effect = status
+    ability.mp_cost = mp_cost
     
     # Set custom message if provided
     if custom_message != "":
@@ -210,7 +266,8 @@ static func create_multi_effect_ability(
     target_type: int,
     description: String,
     effects: Array,
-    custom_message: String = ""
+    custom_message: String = "",
+    mp_cost: int = 0
 ) -> Ability:
     # Create the multi-effect ability
     var ability = Ability.new()
@@ -219,9 +276,38 @@ static func create_multi_effect_ability(
     ability.description = description
     ability.effect_type = Ability.EffectType.MULTI
     ability.additional_effects = effects
+    ability.mp_cost = mp_cost
     
     # Set custom message if provided
     if custom_message != "":
         ability.custom_message = custom_message
+    
+    return ability
+
+# Create an MP restore ability
+static func create_mp_restore_ability(
+    name: String,
+    mp_amount: int,
+    target_type: int,
+    description: String,
+    custom_message: String = "",
+    mp_cost: int = 0
+) -> Ability:
+    # Custom ability for MP restoration
+    var ability = Ability.new()
+    ability.name = name
+    ability.target_type = target_type
+    ability.description = description
+    ability.effect_type = Ability.EffectType.UTILITY
+    ability.mp_cost = mp_cost
+    
+    # Set custom message
+    if custom_message != "":
+        ability.custom_message = custom_message
+    else:
+        ability.custom_message = "{user} restores {power} MP to {target}!"
+    
+    # We'll handle the MP restoration in the CombatSystem when abilities are used
+    # This is a placeholder for now
     
     return ability

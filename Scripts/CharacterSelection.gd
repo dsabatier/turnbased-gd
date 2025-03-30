@@ -42,7 +42,18 @@ func populate_available_list() -> void:
 
 func create_combatant_option(combatant_data: Combatant) -> Button:
 	var option: Button = Button.new()
-	option.text = combatant_data.name + " (HP: " + str(combatant_data.max_hp) + ", SPD: " + str(combatant_data.speed) + ")"
+	
+	# Create a more detailed description of the combatant
+	var text = combatant_data.name + "\n"
+	text += "HP: " + str(combatant_data.max_hp) + " | "
+	text += "MP: " + str(combatant_data.max_mp) + " | "
+	text += "SPD: " + str(combatant_data.speed) + "\n"
+	text += "ATK: " + str(combatant_data.physical_attack) + " | "
+	text += "MAG: " + str(combatant_data.magic_attack) + " | "
+	text += "DEF: " + str(combatant_data.physical_defense) + " | "
+	text += "RES: " + str(combatant_data.magic_defense)
+	
+	option.text = text
 	option.set_script(CombatantOption)
 	option.combatant_data = combatant_data
 	option.pressed.connect(_on_combatant_option_pressed.bind(option))
@@ -111,8 +122,16 @@ func add_to_party(combatant_data: Combatant) -> void:
 	
 	combatant_copy.name = combatant_data.name + "_" + str(selected_party.size() + 1)  # Unique node name
 	combatant_copy.display_name = display_name  # Human-readable name
+	
+	# Copy all stats
 	combatant_copy.max_hp = combatant_data.max_hp
-	combatant_copy.current_hp = combatant_data.current_hp
+	combatant_copy.current_hp = combatant_data.max_hp
+	combatant_copy.max_mp = combatant_data.max_mp
+	combatant_copy.current_mp = combatant_data.max_mp
+	combatant_copy.physical_attack = combatant_data.physical_attack
+	combatant_copy.magic_attack = combatant_data.magic_attack
+	combatant_copy.physical_defense = combatant_data.physical_defense
+	combatant_copy.magic_defense = combatant_data.magic_defense
 	combatant_copy.speed = combatant_data.speed
 	combatant_copy.is_player = true
 	
@@ -150,8 +169,16 @@ func add_to_enemies(combatant_data: Combatant) -> void:
 	
 	combatant_copy.name = combatant_data.name + "_" + str(selected_enemies.size() + 1)  # Unique node name
 	combatant_copy.display_name = display_name  # Human-readable name
+	
+	# Copy all stats
 	combatant_copy.max_hp = combatant_data.max_hp
-	combatant_copy.current_hp = combatant_data.current_hp
+	combatant_copy.current_hp = combatant_data.max_hp
+	combatant_copy.max_mp = combatant_data.max_mp
+	combatant_copy.current_mp = combatant_data.max_mp
+	combatant_copy.physical_attack = combatant_data.physical_attack
+	combatant_copy.magic_attack = combatant_data.magic_attack
+	combatant_copy.physical_defense = combatant_data.physical_defense
+	combatant_copy.magic_defense = combatant_data.magic_defense
 	combatant_copy.speed = combatant_data.speed
 	combatant_copy.is_player = false
 	
@@ -172,9 +199,9 @@ func add_to_enemies(combatant_data: Combatant) -> void:
 func create_selection_item(combatant_data: Combatant, is_party: bool) -> HBoxContainer:
 	var container: HBoxContainer = HBoxContainer.new()
 	
-	# Label for combatant name
+	# Label for combatant name and stats
 	var label: Label = Label.new()
-	label.text = combatant_data.name
+	label.text = combatant_data.display_name + " [HP: " + str(combatant_data.max_hp) + ", MP: " + str(combatant_data.max_mp) + "]"
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	container.add_child(label)
 	

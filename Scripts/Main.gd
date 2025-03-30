@@ -64,10 +64,12 @@ func create_example_combatants() -> Array[Combatant]:
 	# Create abilities using the factory
 	var fire_attack: Ability = AbilityFactory.create_damage_ability(
 		"Fire Attack", 
-		20, 
+		15, 
 		Ability.TargetType.ENEMY, 
-		"Deals 20 fire damage to an enemy",
-		"{user} conjures a ball of fire that strikes {target} for {power} damage!"
+		"Deals 15 fire damage to an enemy",
+		"{user} conjures a ball of fire that strikes {target} for {power} damage!",
+		10,
+		Ability.DamageType.MAGICAL
 	)
 	
 	var heal_spell: Ability = AbilityFactory.create_healing_ability(
@@ -75,25 +77,29 @@ func create_example_combatants() -> Array[Combatant]:
 		15, 
 		Ability.TargetType.FRIENDLY, 
 		"Heals an ally for 15 HP",
-		"{user} channels healing energy to restore {power} HP to {target}!"
+		"{user} channels healing energy to restore {power} HP to {target}!",
+		15
 	)
 	
 	var poison_ability: Ability = AbilityFactory.create_dot_ability(
 		"Poison", 
-		8,  # 8 damage per tick
+		6,  # 6 damage per tick
 		3,  # lasts 3 turns
 		Ability.TargetType.ENEMY, 
-		"Poisons an enemy, causing 8 damage for 3 turns",
-		"{user} injects {target} with toxic venom that will deal damage for {duration} turns!"
+		"Poisons an enemy, causing 6 damage for 3 turns",
+		"{user} injects {target} with toxic venom that will deal damage for {duration} turns!",
+		12,
+		Ability.DamageType.MAGICAL
 	)
 	
 	var regeneration_ability: Ability = AbilityFactory.create_hot_ability(
 		"Regeneration", 
-		6,  # 6 healing per tick
+		5,  # 5 healing per tick
 		4,  # lasts 4 turns
 		Ability.TargetType.FRIENDLY, 
-		"Regenerates 6 HP per turn for 4 turns",
-		"{user} casts a regeneration spell on {target}, healing them for the next {duration} turns!"
+		"Regenerates 5 HP per turn for 4 turns",
+		"{user} casts a regeneration spell on {target}, healing them for the next {duration} turns!",
+		18
 	)
 	
 	var self_buff: Ability = AbilityFactory.create_healing_ability(
@@ -101,7 +107,8 @@ func create_example_combatants() -> Array[Combatant]:
 		10, 
 		Ability.TargetType.SELF, 
 		"Concentrate to recover 10 HP",
-		"{user} focuses their mind, recovering {power} HP!"
+		"{user} focuses their mind, recovering {power} HP!",
+		5
 	)
 	
 	var protect_ally: Ability = AbilityFactory.create_hot_ability(
@@ -110,7 +117,8 @@ func create_example_combatants() -> Array[Combatant]:
 		3, 
 		Ability.TargetType.OTHER_FRIENDLY, 
 		"Cast a protection spell on an ally that heals 5 HP for 3 turns",
-		"{user} surrounds {target} with a protective aura that will heal for {duration} turns!"
+		"{user} surrounds {target} with a protective aura that will heal for {duration} turns!",
+		15
 	)
 	
 	var skip_turn: Ability = AbilityFactory.create_skip_turn_ability(
@@ -122,8 +130,15 @@ func create_example_combatants() -> Array[Combatant]:
 	# Create a wizard with these abilities
 	var wizard: Combatant = Combatant.new()
 	wizard.name = "Wizard"
+	wizard.display_name = "Wizard"
 	wizard.max_hp = 75
 	wizard.current_hp = 75
+	wizard.max_mp = 100
+	wizard.current_mp = 100
+	wizard.physical_attack = 5
+	wizard.magic_attack = 20
+	wizard.physical_defense = 6
+	wizard.magic_defense = 15
 	wizard.speed = 10
 	wizard.is_player = true
 	wizard.abilities = [fire_attack, heal_spell, poison_ability, regeneration_ability, skip_turn]
@@ -131,12 +146,27 @@ func create_example_combatants() -> Array[Combatant]:
 	# Create a cleric with healing abilities
 	var cleric: Combatant = Combatant.new()
 	cleric.name = "Cleric"
+	cleric.display_name = "Cleric"
 	cleric.max_hp = 90
 	cleric.current_hp = 90
-	cleric.speed = 8
+	cleric.max_mp = 85
+	cleric.current_mp = 85
+	cleric.physical_attack = 8
+	cleric.magic_attack = 15
+	cleric.physical_defense = 12
+	cleric.magic_defense = 18
+	cleric.speed = 7
 	cleric.is_player = true
 	cleric.abilities = [
-		AbilityFactory.create_damage_ability("Smite", 15, Ability.TargetType.ENEMY, "A holy attack"),
+		AbilityFactory.create_damage_ability(
+			"Smite", 
+			12, 
+			Ability.TargetType.ENEMY, 
+			"A holy attack", 
+			"", 
+			5, 
+			Ability.DamageType.MAGICAL
+		),
 		heal_spell,
 		protect_ally,
 		regeneration_ability,
@@ -146,25 +176,65 @@ func create_example_combatants() -> Array[Combatant]:
 	# Create enemy goblin
 	var goblin: Combatant = Combatant.new()
 	goblin.name = "Goblin Scout"
+	goblin.display_name = "Goblin Scout"
 	goblin.max_hp = 60
 	goblin.current_hp = 60
+	goblin.max_mp = 20
+	goblin.current_mp = 20
+	goblin.physical_attack = 12
+	goblin.magic_attack = 3
+	goblin.physical_defense = 6
+	goblin.magic_defense = 4
 	goblin.speed = 12
 	goblin.is_player = false
 	goblin.abilities = [
-		AbilityFactory.create_damage_ability("Stab", 12, Ability.TargetType.ENEMY, "A quick stab attack"),
-		AbilityFactory.create_dot_ability("Toxic Blade", 5, 2, Ability.TargetType.ENEMY, "Applies a weak poison")
+		AbilityFactory.create_damage_ability(
+			"Stab", 
+			10, 
+			Ability.TargetType.ENEMY, 
+			"A quick stab attack"
+		),
+		AbilityFactory.create_dot_ability(
+			"Toxic Blade", 
+			4, 
+			2, 
+			Ability.TargetType.ENEMY, 
+			"Applies a weak poison",
+			"",
+			5,
+			Ability.DamageType.PHYSICAL
+		)
 	]
 	
 	# Create enemy orc
 	var orc: Combatant = Combatant.new()
 	orc.name = "Orc Bruiser"
-	orc.max_hp = 85
-	orc.current_hp = 85
+	orc.display_name = "Orc Bruiser"
+	orc.max_hp = 95
+	orc.current_hp = 95
+	orc.max_mp = 30
+	orc.current_mp = 30
+	orc.physical_attack = 18
+	orc.magic_attack = 2
+	orc.physical_defense = 12
+	orc.magic_defense = 5
 	orc.speed = 6
 	orc.is_player = false
 	orc.abilities = [
-		AbilityFactory.create_damage_ability("Club Smash", 20, Ability.TargetType.ENEMY, "A heavy club attack"),
-		AbilityFactory.create_healing_ability("Crude Potion", 15, Ability.TargetType.SELF, "Drinks a healing potion"),
+		AbilityFactory.create_damage_ability(
+			"Club Smash", 
+			18, 
+			Ability.TargetType.ENEMY, 
+			"A heavy club attack"
+		),
+		AbilityFactory.create_healing_ability(
+			"Crude Potion", 
+			12, 
+			Ability.TargetType.SELF, 
+			"Drinks a healing potion",
+			"",
+			8
+		),
 		self_buff
 	]
 	
@@ -180,7 +250,10 @@ func create_test_ability() -> Ability:
 		5, 
 		3, 
 		Ability.TargetType.ENEMY,
-		"Burns the target for 5 damage over 3 turns"
+		"Burns the target for 5 damage over 3 turns",
+		"",
+		10,
+		Ability.DamageType.MAGICAL
 	)
 	
 	return fire_dot

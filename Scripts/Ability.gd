@@ -4,6 +4,7 @@ extends Resource
 
 enum TargetType {ENEMY, FRIENDLY, SELF, OTHER_FRIENDLY, ANY}
 enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI}
+enum DamageType {PHYSICAL, MAGICAL, PURE} # Pure damage bypasses defenses
 
 @export var name: String
 @export var power: int
@@ -11,6 +12,8 @@ enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI}
 @export var description: String
 @export var effect_type: EffectType = EffectType.DAMAGE
 @export var custom_message: String = ""  # Custom message to display when used
+@export var mp_cost: int = 0  # MP cost to use this ability
+@export var damage_type: DamageType = DamageType.PHYSICAL # Only relevant for damage abilities
 
 # For status effect abilities
 @export var status_effect: StatusEffect = null
@@ -30,15 +33,42 @@ func execute(user, target):
     match effect_type:
         EffectType.DAMAGE:
             var damage = power
-            var actual_damage = target.take_damage(damage)  # Store the actual damage dealt
             
-            if custom_message != "":
-                result = custom_message.format({"user": user_name, "target": target_name, "power": actual_damage, "effect": name})
-            # If damage was reduced, mention it
-            elif actual_damage < damage:
-                result = "%s used %s on %s for %d damage (reduced from %d)!" % [user_name, name, target_name, actual_damage, damage]
-            else:
-                result = "%s used %s on %s for %d damage!" % [user_name, name, target_name, actual_damage]
+            # Apply stat scaling
+            if damage_type == DamageType.PHYSICAL:
+                # Physical attacks scale with physical_attack (each point adds 1% to base damage)
+                damage += int(power * (user.physical_attack / 100.0))
+                var actual_damage = target.take_damage(damage, false)  # false = physical damage
+                
+                if custom_message != "":
+                    result = custom_message.format({"user": user_name, "target": target_name, "power": actual_damage, "effect": name})
+                # If damage was reduced, mention it
+                elif actual_damage < damage:
+                    result = "%s used %s on %s for %d damage (reduced from %d)!" % [user_name, name, target_name, actual_damage, damage]
+                else:
+                    result = "%s used %s on %s for %d damage!" % [user_name, name, target_name, actual_damage]
+            
+            elif damage_type == DamageType.MAGICAL:
+                # Magical attacks scale with magic_attack (each point adds 1% to base damage)
+                damage += int(power * (user.magic_attack / 100.0))
+                var actual_damage = target.take_damage(damage, true)  # true = magical damage
+                
+                if custom_message != "":
+                    result = custom_message.format({"user": user_name, "target": target_name, "power": actual_damage, "effect": name})
+                # If damage was reduced, mention it
+                elif actual_damage < damage:
+                    result = "%s used %s on %s for %d magical damage (reduced from %d)!" % [user_name, name, target_name, actual_damage, damage]
+                else:
+                    result = "%s used %s on %s for %d magical damage!" % [user_name, name, target_name, actual_damage]
+            
+            else: # PURE damage
+                # Pure damage bypasses defense calculations
+                var actual_damage = target.take_damage(damage)
+                
+                if custom_message != "":
+                    result = custom_message.format({"user": user_name, "target": target_name, "power": actual_damage, "effect": name})
+                else:
+                    result = "%s used %s on %s for %d pure damage!" % [user_name, name, target_name, actual_damage]
             
         EffectType.HEALING:
             var healing = power
@@ -135,4 +165,6 @@ func create_copy():
     new_ability.status_effect = status_effect
     new_ability.additional_effects = additional_effects.duplicate()
     new_ability.apply_all_effects = apply_all_effects
+    new_ability.mp_cost = mp_cost
+    new_ability.damage_type = damage_type
     return new_ability

@@ -73,13 +73,26 @@ func process_turn(ability_index: int, target_combatant: Combatant = null) -> voi
 	if current_combatant.is_defeated:
 		add_log("%s is defeated and cannot act!" % current_combatant.name)
 	else:
-		# If the ability is SELF-targeting and no target is provided, target self
+		# Check if the ability requires MP
 		var ability = current_combatant.abilities[ability_index]
-		if ability.target_type == Ability.TargetType.SELF and target_combatant == null:
-			target_combatant = current_combatant
+		var mp_cost = ability.mp_cost if ability.has_method("get") and ability.get("mp_cost") != null else 0
+		
+		if mp_cost > 0 and current_combatant.current_mp < mp_cost:
+			add_log("%s doesn't have enough MP to use %s!" % [current_combatant.display_name, ability.name])
+		else:
+			# If the ability is SELF-targeting and no target is provided, target self
+			if ability.target_type == Ability.TargetType.SELF and target_combatant == null:
+				target_combatant = current_combatant
+				
+			# Special handling for the Skip Turn ability to restore MP
+			if ability.name.begins_with("Skip") or ability.name.begins_with("Meditate"):
+				# Restore some MP when skipping a turn
+				var mp_restore = 15
+				current_combatant.restore_mp(mp_restore)
+				add_log("%s meditates and restores %d MP!" % [current_combatant.display_name, mp_restore])
 			
-		var result = current_combatant.use_ability(ability_index, target_combatant)
-		add_log(result)
+			var result = current_combatant.use_ability(ability_index, target_combatant)
+			add_log(result)
 	
 	# Process end-of-turn status effects
 	process_status_effects(current_combatant, StatusEffect.TriggerType.TURN_END)
@@ -107,6 +120,14 @@ func process_cpu_turn() -> void:
 	if action == null:
 		add_log("%s couldn't find a valid action!" % current_combatant.name)
 	else:
+		# Special handling for the Skip Turn ability to restore MP
+		var ability = current_combatant.abilities[action.ability]
+		if ability.name.begins_with("Skip") or ability.name.begins_with("Meditate"):
+			# Restore some MP when skipping a turn
+			var mp_restore = 15
+			current_combatant.restore_mp(mp_restore)
+			add_log("%s meditates and restores %d MP!" % [current_combatant.display_name, mp_restore])
+			
 		var result = current_combatant.use_ability(action.ability, action.target)
 		add_log(result)
 	

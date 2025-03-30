@@ -4,33 +4,55 @@ extends Node
 
 signal defeated
 signal hp_changed(current_hp, max_hp)
+signal mp_changed(current_mp, max_mp)
 signal status_effect_added(effect)
 signal status_effect_removed(effect)
 signal status_effect_triggered(effect, result)
 
+# Basic combatant identification
 @export var display_name: String
-@export var max_hp: int
-@export var speed: int
 @export var is_player: bool
 
+# Core stats
+@export var max_hp: int = 100
+@export var max_mp: int = 50
+@export var physical_attack: int = 10
+@export var magic_attack: int = 10
+@export var physical_defense: int = 10
+@export var magic_defense: int = 10
+@export var speed: int = 10
+
+# Current values
 var current_hp: int
+var current_mp: int
 var abilities: Array[Ability] = []
 var is_defeated: bool = false
 var status_effects: Array[StatusEffect] = []
 
 func _ready():
     current_hp = max_hp
+    current_mp = max_mp
     
     # Initialize display_name if not set
     if display_name == null or display_name.is_empty():
         display_name = name
 
-func take_damage(amount: int) -> int:
+func take_damage(amount: int, is_magical: bool = false) -> int:
     var original_amount = amount
     var reduced_amount = amount
     var damage_reduction_message = ""
     
-    # Apply any damage reduction effects
+    # Apply defense stat reduction
+    if is_magical:
+        # Apply magic defense (each point reduces damage by 1%)
+        var defense_reduction = int(reduced_amount * (magic_defense / 100.0))
+        reduced_amount = max(reduced_amount - defense_reduction, 1) # Minimum 1 damage
+    else:
+        # Apply physical defense (each point reduces damage by 1%)
+        var defense_reduction = int(reduced_amount * (physical_defense / 100.0))
+        reduced_amount = max(reduced_amount - defense_reduction, 1) # Minimum 1 damage
+    
+    # Apply any damage reduction effects from status effects
     for effect in status_effects:
         if effect.trigger_type == StatusEffect.TriggerType.ON_DAMAGE_TAKEN:
             if effect.effect_behavior == StatusEffect.EffectBehavior.REDUCE_DAMAGE:
@@ -65,14 +87,33 @@ func heal(amount: int) -> void:
     # Trigger ON_HEALING_RECEIVED effects
     trigger_status_effects(StatusEffect.TriggerType.ON_HEALING_RECEIVED)
 
+func use_mp(amount: int) -> bool:
+    if current_mp >= amount:
+        current_mp -= amount
+        emit_signal("mp_changed", current_mp, max_mp)
+        return true
+    return false
+    
+func restore_mp(amount: int) -> void:
+    current_mp = min(max_mp, current_mp + amount)
+    emit_signal("mp_changed", current_mp, max_mp)
+
 func use_ability(ability_index: int, target = null) -> String:
     if is_defeated:
         return "%s is defeated and cannot act!" % display_name
     
     var ability = abilities[ability_index]
     
+    # Check if we have enough MP to use this ability
+    var mp_cost = ability.mp_cost if ability.has_method("get") and ability.get("mp_cost") != null else 0
+    if mp_cost > 0 and current_mp < mp_cost:
+        return "%s doesn't have enough MP to use %s!" % [display_name, ability.name]
+    
     # Handle SELF target type automatically
     if ability.target_type == Ability.TargetType.SELF:
+        # Consume MP if needed
+        if mp_cost > 0:
+            use_mp(mp_cost)
         return ability.execute(self, self)
     
     # Ensure target is provided for non-SELF abilities
@@ -85,6 +126,10 @@ func use_ability(ability_index: int, target = null) -> String:
        (ability.target_type == Ability.TargetType.OTHER_FRIENDLY and (target.is_player != is_player or target == self)):
         return "Invalid target for %s!" % ability.name
     
+    # Consume MP if needed
+    if mp_cost > 0:
+        use_mp(mp_cost)
+        
     return ability.execute(self, target)
 
 # AI logic for CPU-controlled combatants
@@ -93,7 +138,17 @@ func choose_action(friendlies: Array, enemies: Array):
         return null
     
     # Simple AI that randomly chooses an ability and a valid target
-    var ability_index = randi() % abilities.size()
+    var valid_abilities = []
+    for i in range(abilities.size()):
+        var ability = abilities[i]
+        var mp_cost = ability.mp_cost if ability.has_method("get") and ability.get("mp_cost") != null else 0
+        if mp_cost <= current_mp:
+            valid_abilities.append(i)
+    
+    if valid_abilities.size() == 0:
+        return null
+        
+    var ability_index = valid_abilities[randi() % valid_abilities.size()]
     var ability = abilities[ability_index]
     
     # Handle SELF target type immediately
@@ -147,7 +202,7 @@ func _on_status_effect_expired(effect: StatusEffect) -> void:
 
 # Enhanced trigger_status_effects method to handle all trigger types
 func trigger_status_effects(trigger: int) -> Array[String]:
-    var results = []
+    var results : Array[String] = []
     
     # Create a copy of the array since effects might be removed during iteration
     var effects_to_trigger = status_effects.duplicate()

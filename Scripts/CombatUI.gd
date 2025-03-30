@@ -1,6 +1,5 @@
 extends Control
 
-
 @export var combat_system: CombatSystem
 @export var log_container: RichTextLabel
 @export var player_container: VBoxContainer
@@ -56,6 +55,10 @@ func setup_combatant_ui():
 			update_combatant_button_text(button, combatant)
 		)
 		
+		combatant.mp_changed.connect(func(current, max_val): 
+			update_combatant_button_text(button, combatant)
+		)
+		
 		combatant.status_effect_added.connect(func(effect): 
 			update_combatant_button_text(button, combatant)
 		)
@@ -76,6 +79,10 @@ func setup_combatant_ui():
 			update_combatant_button_text(button, combatant)
 		)
 		
+		combatant.mp_changed.connect(func(current, max_val): 
+			update_combatant_button_text(button, combatant)
+		)
+		
 		combatant.status_effect_added.connect(func(effect): 
 			update_combatant_button_text(button, combatant)
 		)
@@ -90,11 +97,23 @@ func setup_combatant_ui():
 func update_combatant_button_text(button: Button, combatant: Combatant):
 	# Use display_name if available, otherwise use node name
 	var display_name = combatant.display_name if combatant.has_method("get") and combatant.get("display_name") != null else combatant.name
-	var text = display_name + " HP: " + str(combatant.current_hp) + "/" + str(combatant.max_hp)
+	var text = display_name + " [HP: " + str(combatant.current_hp) + "/" + str(combatant.max_hp)
+	
+	# Add MP
+	if combatant.max_mp > 0:
+		text += ", MP: " + str(combatant.current_mp) + "/" + str(combatant.max_mp)
+	
+	# Add core stats
+	text += "]\n"
+	text += "ATK: " + str(combatant.physical_attack) + " | "
+	text += "MAG: " + str(combatant.magic_attack) + " | "
+	text += "DEF: " + str(combatant.physical_defense) + " | "
+	text += "RES: " + str(combatant.magic_defense) + " | "
+	text += "SPD: " + str(combatant.speed)
 	
 	# Add status effect icons/names if any exist
 	if combatant.status_effects.size() > 0:
-		text += " ["
+		text += "\nStatus: ["
 		for i in range(combatant.status_effects.size()):
 			var effect = combatant.status_effects[i]
 			text += effect.name + "(" + str(effect.remaining_turns) + ")"
@@ -113,7 +132,28 @@ func update_ability_ui(combatant: Combatant):
 	for i in range(combatant.abilities.size()):
 		var ability = combatant.abilities[i]
 		var button = Button.new()
-		button.text = ability.name
+		
+		# Format the ability text to include MP cost if any
+		var mp_text = ""
+		if ability.has_method("get") and ability.get("mp_cost") != null and ability.mp_cost > 0:
+			mp_text = " [MP: " + str(ability.mp_cost) + "]"
+			
+			# Disable the button if not enough MP
+			if combatant.current_mp < ability.mp_cost:
+				button.disabled = true
+		
+		# Format ability text with damage type if applicable
+		var damage_type_text = ""
+		if ability.has_method("get") and ability.get("damage_type") != null and ability.effect_type == Ability.EffectType.DAMAGE:
+			match ability.damage_type:
+				Ability.DamageType.PHYSICAL:
+					damage_type_text = " (Physical)"
+				Ability.DamageType.MAGICAL:
+					damage_type_text = " (Magical)"
+				Ability.DamageType.PURE:
+					damage_type_text = " (Pure)"
+		
+		button.text = ability.name + mp_text + damage_type_text
 		button.tooltip_text = ability.description
 		button.pressed.connect(func(): _on_ability_selected(i))
 		ability_container.add_child(button)
@@ -217,4 +257,4 @@ func _on_combat_ended(winner: String):
 func clear_ability_buttons() -> void:
 	# Remove all ability buttons
 	for child in ability_container.get_children():
-		child.queue_free()# CombatUI.gd
+		child.queue_free()
