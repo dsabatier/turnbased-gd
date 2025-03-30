@@ -7,4 +7,4 @@ func _ready() -> void:
 
 func _change_scene() -> void:
 	# Change to the character selection scene
-	get_tree().change_scene_to_file("res://Scenes/character_selection.tscn")
+	get_tree().change_scene_to_file("res://Scenes/start_menu.tscn")
