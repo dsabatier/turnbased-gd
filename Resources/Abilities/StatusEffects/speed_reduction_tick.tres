@@ -11,6 +11,6 @@ description = "Reduces speed"
 effect_type = 3
 custom_message = "{target} moves sluggishly due to the freezing effect!"
 mp_cost = 0
-damage_type = 0
+damage_type_id = "magical"
 additional_effects = Array[Resource]([])
 apply_all_effects = true

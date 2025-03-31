@@ -238,26 +238,21 @@ func _on_start_battle_button_pressed() -> void:
 	
 	# Show UI style selection dialog
 	var ui_dialog = AcceptDialog.new()
-	ui_dialog.title = "Select UI Style"
-	ui_dialog.dialog_text = "Please select a UI style for combat:"
-	ui_dialog.add_button("Classic UI", true, "classic_ui")
-	ui_dialog.add_button("Minimalist UI", true, "minimalist_ui")
-	
-	ui_dialog.custom_action.connect(func(action):
+	ui_dialog.title = "Ready?"
+	ui_dialog.dialog_text = "Carry on with this combat?"
+	ui_dialog.add_button("Wait no!", true, "cancel")
+
+	ui_dialog.confirmed.connect(func():
+		get_tree().change_scene_to_file("res://Scenes/minimalist_combat_scene.tscn")
 		ui_dialog.queue_free()
-		
-		if action == "classic_ui":
-			# Change to the classic main scene
-			get_tree().change_scene_to_file("res://Scenes/main.tscn")
-		elif action == "minimalist_ui":
-			# Change to the minimalist UI scene
-			get_tree().change_scene_to_file("res://Scenes/minimalist_combat_scene.tscn")
 	)
-	
+
+	ui_dialog.canceled.connect(func():
+		ui_dialog.queue_free()
+	)
+		
 	add_child(ui_dialog)
 	ui_dialog.popup_centered()
-
-	# Add this function to CharacterSelection.gd
 
 # Function to handle combatants created from resources
 func add_to_party_from_resource(combatant_resource: CombatantResource) -> void:

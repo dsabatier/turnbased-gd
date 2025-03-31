@@ -1,0 +1,52 @@
+{
+	"damage_types": {
+	  "physical": {
+		"name": "Physical",
+		"description": "Raw physical damage from weapons and brute force",
+		"color": "#FF7777",
+		"defense_stat": "physical_defense"
+	  },
+	  "magical": {
+		"name": "Magical",
+		"description": "Arcane energy that bypasses physical defenses",
+		"color": "#7777FF",
+		"defense_stat": "magic_defense"
+	  },
+	  "fire": {
+		"name": "Fire",
+		"description": "Burning damage that can apply burn status",
+		"color": "#FF5500",
+		"defense_stat": "magic_defense"
+	  },
+	  "ice": {
+		"name": "Ice",
+		"description": "Freezing damage that can slow enemies",
+		"color": "#77DDFF",
+		"defense_stat": "magic_defense"
+	  },
+	  "poison": {
+		"name": "Poison",
+		"description": "Toxic damage that can poison targets",
+		"color": "#77FF77",
+		"defense_stat": "magic_defense"
+	  },
+	  "holy": {
+		"name": "Holy",
+		"description": "Divine energy effective against undead",
+		"color": "#FFFFAA",
+		"defense_stat": "magic_defense"
+	  },
+	  "necrotic": {
+		"name": "Necrotic",
+		"description": "Death energy that drains life",
+		"color": "#AA00AA",
+		"defense_stat": "magic_defense"
+	  },
+	  "pure": {
+		"name": "Pure",
+		"description": "Damage that bypasses all defenses",
+		"color": "#FFFFFF",
+		"defense_stat": null
+	  }
+	}
+  }

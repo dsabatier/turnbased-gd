@@ -1,11 +1,10 @@
-# AbilityResource.gd
+# AbilityResource.gd updated for data-driven damage types (No Secondary Effects)
 class_name AbilityResource
 extends Resource
 
 # Enums (same as in Ability.gd for compatibility)
 enum TargetType {ENEMY, FRIENDLY, SELF, OTHER_FRIENDLY, ANY}
 enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI}
-enum DamageType {PHYSICAL, MAGICAL, PURE} # Pure damage bypasses defenses
 
 # Core properties
 @export var name: String = ""
@@ -15,7 +14,9 @@ enum DamageType {PHYSICAL, MAGICAL, PURE} # Pure damage bypasses defenses
 @export_enum("Damage", "Healing", "Status", "Utility", "Multi-Effect") var effect_type: int = EffectType.DAMAGE
 @export var custom_message: String = ""
 @export var mp_cost: int = 0
-@export_enum("Physical", "Magical", "Pure") var damage_type: int = DamageType.PHYSICAL
+
+# Damage type now uses string ID instead of enum
+@export var damage_type_id: String = "physical"
 
 # Status effect properties
 @export var status_effect: Resource # StatusEffectResource reference
@@ -37,7 +38,7 @@ func create_ability_instance() -> Ability:
     ability.effect_type = effect_type
     ability.custom_message = custom_message
     ability.mp_cost = mp_cost
-    ability.damage_type = damage_type
+    ability.damage_type_id = damage_type_id
     ability.source_resource = self
     
     # Handle status effects if present

@@ -1,11 +1,537 @@
-[gd_scene load_steps=4 format=3 uid="uid://bsc4y28cjifn4"]
+[gd_scene load_steps=4 format=3 uid="uid://d4kh15r6exv6"]
 
-[ext_resource type="Script" path="res://Scripts/Main.gd" id="1_aj1tq"]
 [ext_resource type="Script" path="res://Scripts/CombatSystem.gd" id="1_ehj7o"]
-[ext_resource type="Script" path="res://Scripts/CombatUI.gd" id="2_6w5mw"]
+
+[sub_resource type="GDScript" id="GDScript_itq2x"]
+script/source = "# GameSetup.gd
+extends Node
+
+@onready var combat_system: CombatSystem = $CombatSystem
+
+func _ready() -> void:
+	# Check if we're coming from the character selection screen
+	if CombatantDatabase.get_selected_party().size() > 0 and CombatantDatabase.get_selected_enemies().size() > 0:
+		# Use the selected combatants
+		setup_selected_combatants()
+	else:
+		# Create default combatants for testing
+		var combatants: Array[Combatant] = create_example_combatants()
+		
+		# Add all combatants as children (required for signals to work)
+		for combatant in combatants:
+			add_child(combatant)
+		
+		# Register combatants with the combat system
+		combat_system.player_combatants = [combatants[0], combatants[1]]
+		combat_system.cpu_combatants = [combatants[2], combatants[3]]
+	
+	# Start the combat
+	combat_system.start()
+
+func setup_selected_combatants() -> void:
+	var player_combatants: Array[Combatant] = CombatantDatabase.get_selected_party()
+	var enemy_combatants: Array[Combatant] = CombatantDatabase.get_selected_enemies()
+	
+	# Debug: Check abilities before initialization
+	print(\"Checking abilities for player combatants:\")
+	for combatant in player_combatants:
+		print(combatant.name + \" has \" + str(combatant.abilities.size()) + \" abilities:\")
+		for ability in combatant.abilities:
+			print(\"  - \" + ability.name)
+	
+	print(\"Checking abilities for enemy combatants:\")
+	for combatant in enemy_combatants:
+		print(combatant.name + \" has \" + str(combatant.abilities.size()) + \" abilities:\")
+		for ability in combatant.abilities:
+			print(\"  - \" + ability.name)
+	
+	# Ensure all combatants have the correct is_player value
+	for combatant in player_combatants:
+		combatant.is_player = true
+		print(\"Player combatant: \" + combatant.name + \" is_player=\" + str(combatant.is_player))
+	
+	for combatant in enemy_combatants:
+		combatant.is_player = false
+		print(\"Enemy combatant: \" + combatant.name + \" is_player=\" + str(combatant.is_player))
+	
+	# Add all combatants as children (required for signals to work)
+	for combatant in player_combatants + enemy_combatants:
+		# Initialize signals when adding as child
+		combatant._ready()
+		add_child(combatant)
+	
+	# Register combatants with the combat system
+	combat_system.player_combatants = player_combatants
+	combat_system.cpu_combatants = enemy_combatants
+
+# Example of creating combatants with special abilities
+func create_example_combatants() -> Array[Combatant]:
+	# Create abilities using the factory
+	var fire_attack: Ability = AbilityFactory.create_damage_ability(
+		\"Fire Attack\", 
+		15, 
+		Ability.TargetType.ENEMY, 
+		\"Deals 15 fire damage to an enemy\",
+		\"{user} conjures a ball of fire that strikes {target} for {power} damage!\",
+		10,
+		Ability.DamageType.MAGICAL
+	)
+	
+	var heal_spell: Ability = AbilityFactory.create_healing_ability(
+		\"Heal\", 
+		15, 
+		Ability.TargetType.FRIENDLY, 
+		\"Heals an ally for 15 HP\",
+		\"{user} channels healing energy to restore {power} HP to {target}!\",
+		15
+	)
+	
+	var poison_ability: Ability = AbilityFactory.create_dot_ability(
+		\"Poison\", 
+		6,  # 6 damage per tick
+		3,  # lasts 3 turns
+		Ability.TargetType.ENEMY, 
+		\"Poisons an enemy, causing 6 damage for 3 turns\",
+		\"{user} injects {target} with toxic venom that will deal damage for {duration} turns!\",
+		12,
+		Ability.DamageType.MAGICAL
+	)
+	
+	var regeneration_ability: Ability = AbilityFactory.create_hot_ability(
+		\"Regeneration\", 
+		5,  # 5 healing per tick
+		4,  # lasts 4 turns
+		Ability.TargetType.FRIENDLY, 
+		\"Regenerates 5 HP per turn for 4 turns\",
+		\"{user} casts a regeneration spell on {target}, healing them for the next {duration} turns!\",
+		18
+	)
+	
+	var self_buff: Ability = AbilityFactory.create_healing_ability(
+		\"Focus\", 
+		10, 
+		Ability.TargetType.SELF, 
+		\"Concentrate to recover 10 HP\",
+		\"{user} focuses their mind, recovering {power} HP!\",
+		5
+	)
+	
+	var protect_ally: Ability = AbilityFactory.create_hot_ability(
+		\"Protect\", 
+		5, 
+		3, 
+		Ability.TargetType.OTHER_FRIENDLY, 
+		\"Cast a protection spell on an ally that heals 5 HP for 3 turns\",
+		\"{user} surrounds {target} with a protective aura that will heal for {duration} turns!\",
+		15
+	)
+	
+	var skip_turn: Ability = AbilityFactory.create_skip_turn_ability(
+		\"Skip Turn\",
+		\"Skip this turn to conserve energy\",
+		\"{user} takes a moment to observe the battlefield...\"
+	)
+	
+	# Create a wizard with these abilities
+	var wizard: Combatant = Combatant.new()
+	wizard.name = \"Wizard\"
+	wizard.display_name = \"Wizard\"
+	wizard.max_hp = 75
+	wizard.current_hp = 75
+	wizard.max_mp = 100
+	wizard.current_mp = 100
+	wizard.physical_attack = 5
+	wizard.magic_attack = 20
+	wizard.physical_defense = 6
+	wizard.magic_defense = 15
+	wizard.speed = 10
+	wizard.is_player = true
+	wizard.abilities = [fire_attack, heal_spell, poison_ability, regeneration_ability, skip_turn]
+	
+	# Create a cleric with healing abilities
+	var cleric: Combatant = Combatant.new()
+	cleric.name = \"Cleric\"
+	cleric.display_name = \"Cleric\"
+	cleric.max_hp = 90
+	cleric.current_hp = 90
+	cleric.max_mp = 85
+	cleric.current_mp = 85
+	cleric.physical_attack = 8
+	cleric.magic_attack = 15
+	cleric.physical_defense = 12
+	cleric.magic_defense = 18
+	cleric.speed = 7
+	cleric.is_player = true
+	cleric.abilities = [
+		AbilityFactory.create_damage_ability(
+			\"Smite\", 
+			12, 
+			Ability.TargetType.ENEMY, 
+			\"A holy attack\", 
+			\"\", 
+			5, 
+			Ability.DamageType.MAGICAL
+		),
+		heal_spell,
+		protect_ally,
+		regeneration_ability,
+		skip_turn
+	]
+	
+	# Create enemy goblin
+	var goblin: Combatant = Combatant.new()
+	goblin.name = \"Goblin Scout\"
+	goblin.display_name = \"Goblin Scout\"
+	goblin.max_hp = 60
+	goblin.current_hp = 60
+	goblin.max_mp = 20
+	goblin.current_mp = 20
+	goblin.physical_attack = 12
+	goblin.magic_attack = 3
+	goblin.physical_defense = 6
+	goblin.magic_defense = 4
+	goblin.speed = 12
+	goblin.is_player = false
+	goblin.abilities = [
+		AbilityFactory.create_damage_ability(
+			\"Stab\", 
+			10, 
+			Ability.TargetType.ENEMY, 
+			\"A quick stab attack\"
+		),
+		AbilityFactory.create_dot_ability(
+			\"Toxic Blade\", 
+			4, 
+			2, 
+			Ability.TargetType.ENEMY, 
+			\"Applies a weak poison\",
+			\"\",
+			5,
+			Ability.DamageType.PHYSICAL
+		)
+	]
+	
+	# Create enemy orc
+	var orc: Combatant = Combatant.new()
+	orc.name = \"Orc Bruiser\"
+	orc.display_name = \"Orc Bruiser\"
+	orc.max_hp = 95
+	orc.current_hp = 95
+	orc.max_mp = 30
+	orc.current_mp = 30
+	orc.physical_attack = 18
+	orc.magic_attack = 2
+	orc.physical_defense = 12
+	orc.magic_defense = 5
+	orc.speed = 6
+	orc.is_player = false
+	orc.abilities = [
+		AbilityFactory.create_damage_ability(
+			\"Club Smash\", 
+			18, 
+			Ability.TargetType.ENEMY, 
+			\"A heavy club attack\"
+		),
+		AbilityFactory.create_healing_ability(
+			\"Crude Potion\", 
+			12, 
+			Ability.TargetType.SELF, 
+			\"Drinks a healing potion\",
+			\"\",
+			8
+		),
+		self_buff
+	]
+	
+	return [wizard, cleric, goblin, orc]
+
+# For testing specific ability types
+func create_test_ability() -> Ability:
+	# Example of creating a complex multi-effect ability
+	
+	# Create a damage ability that applies a DoT effect
+	var fire_dot: Ability = AbilityFactory.create_dot_ability(
+		\"Burning\", 
+		5, 
+		3, 
+		Ability.TargetType.ENEMY,
+		\"Burns the target for 5 damage over 3 turns\",
+		\"\",
+		10,
+		Ability.DamageType.MAGICAL
+	)
+	
+	return fire_dot
+
+# Return to character selection screen
+func return_to_selection() -> void:
+	get_tree().change_scene_to_file(\"res://Scenes/character_selection.tscn\")
+"
+
+[sub_resource type="GDScript" id="GDScript_godeb"]
+script/source = "extends Control
+
+@export var combat_system: CombatSystem
+@export var log_container: RichTextLabel
+@export var player_container: VBoxContainer
+@export var enemy_container: VBoxContainer
+@export var ability_container: HBoxContainer
+
+var selected_ability: int = -1
+var player_combatant_buttons: Array = []
+var enemy_combatant_buttons: Array = []
+
+func _ready():
+	# Connect signals but don't set up the UI yet
+	combat_system.combat_log_updated.connect(_on_combat_log_updated)
+	combat_system.turn_started.connect(_on_turn_started)
+	combat_system.combat_ended.connect(_on_combat_ended)
+	combat_system.combat_started.connect(_on_combat_started)
+	
+	# Clear the UI containers to ensure they're empty
+	for child in player_container.get_children():
+		child.queue_free()
+	
+	for child in enemy_container.get_children():
+		child.queue_free()
+	
+	for child in ability_container.get_children():
+		child.queue_free()
+	
+	log_container.text = \"Waiting for combat to start...\\n\"
+
+# Called when the combat_started signal is emitted
+func _on_combat_started():
+	setup_combatant_ui()
+	log_container.text = \"Combat initialized. Prepare for battle!\\n\"
+	
+	# We need to ensure UI is ready for the first turn
+	if combat_system.current_turn_index < combat_system.turn_order.size():
+		var current_combatant = combat_system.turn_order[combat_system.current_turn_index]
+		if current_combatant.is_player:
+			update_ability_ui(current_combatant)
+			log_container.text += \"It's \" + current_combatant.display_name + \"'s turn!\\n\"
+
+func setup_combatant_ui():
+	# Create buttons for player combatants
+	for combatant in combat_system.player_combatants:
+		var button = Button.new()
+		update_combatant_button_text(button, combatant)
+		button.disabled = true
+		player_container.add_child(button)
+		player_combatant_buttons.append(button)
+		
+		# Connect signals
+		combatant.hp_changed.connect(func(current, max_val): 
+			update_combatant_button_text(button, combatant)
+		)
+		
+		combatant.mp_changed.connect(func(current, max_val): 
+			update_combatant_button_text(button, combatant)
+		)
+		
+		combatant.status_effect_added.connect(func(effect): 
+			update_combatant_button_text(button, combatant)
+		)
+		
+		combatant.status_effect_removed.connect(func(effect): 
+			update_combatant_button_text(button, combatant)
+		)
+	
+	# Create buttons for CPU combatants
+	for combatant in combat_system.cpu_combatants:
+		var button = Button.new()
+		update_combatant_button_text(button, combatant)
+		enemy_container.add_child(button)
+		enemy_combatant_buttons.append(button)
+		
+		# Connect signals
+		combatant.hp_changed.connect(func(current, max_val): 
+			update_combatant_button_text(button, combatant)
+		)
+		
+		combatant.mp_changed.connect(func(current, max_val): 
+			update_combatant_button_text(button, combatant)
+		)
+		
+		combatant.status_effect_added.connect(func(effect): 
+			update_combatant_button_text(button, combatant)
+		)
+		
+		combatant.status_effect_removed.connect(func(effect): 
+			update_combatant_button_text(button, combatant)
+		)
+		
+		combatant.defeated.connect(func(): button.disabled = true)
+
+# Helper function to update button text with status effects
+func update_combatant_button_text(button: Button, combatant: Combatant):
+	# Use display_name if available, otherwise use node name
+	var display_name = combatant.display_name if combatant.has_method(\"get\") and combatant.get(\"display_name\") != null else combatant.name
+	var text = display_name + \" [HP: \" + str(combatant.current_hp) + \"/\" + str(combatant.max_hp)
+	
+	# Add MP
+	if combatant.max_mp > 0:
+		text += \", MP: \" + str(combatant.current_mp) + \"/\" + str(combatant.max_mp)
+	
+	# Add core stats
+	text += \"]\\n\"
+	text += \"ATK: \" + str(combatant.physical_attack) + \" | \"
+	text += \"MAG: \" + str(combatant.magic_attack) + \" | \"
+	text += \"DEF: \" + str(combatant.physical_defense) + \" | \"
+	text += \"RES: \" + str(combatant.magic_defense) + \" | \"
+	text += \"SPD: \" + str(combatant.speed)
+	
+	# Add status effect icons/names if any exist
+	if combatant.status_effects.size() > 0:
+		text += \"\\nStatus: [\"
+		for i in range(combatant.status_effects.size()):
+			var effect = combatant.status_effects[i]
+			text += effect.name + \"(\" + str(effect.remaining_turns) + \")\"
+			if i < combatant.status_effects.size() - 1:
+				text += \", \"
+		text += \"]\"
+	
+	button.text = text
+
+func update_ability_ui(combatant: Combatant):
+	# Clear previous abilities
+	for child in ability_container.get_children():
+		child.queue_free()
+	
+	# Add buttons for each ability
+	for i in range(combatant.abilities.size()):
+		var ability = combatant.abilities[i]
+		var button = Button.new()
+		
+		# Format the ability text to include MP cost if any
+		var mp_text = \"\"
+		if ability.has_method(\"get\") and ability.get(\"mp_cost\") != null and ability.mp_cost > 0:
+			mp_text = \" [MP: \" + str(ability.mp_cost) + \"]\"
+			
+			# Disable the button if not enough MP
+			if combatant.current_mp < ability.mp_cost:
+				button.disabled = true
+		
+		# Format ability text with damage type if applicable
+		var damage_type_text = \"\"
+		if ability.has_method(\"get\") and ability.get(\"damage_type\") != null and ability.effect_type == Ability.EffectType.DAMAGE:
+			match ability.damage_type:
+				Ability.DamageType.PHYSICAL:
+					damage_type_text = \" (Physical)\"
+				Ability.DamageType.MAGICAL:
+					damage_type_text = \" (Magical)\"
+				Ability.DamageType.PURE:
+					damage_type_text = \" (Pure)\"
+		
+		button.text = ability.name + mp_text + damage_type_text
+		button.tooltip_text = ability.description
+		button.pressed.connect(func(): _on_ability_selected(i))
+		ability_container.add_child(button)
+	
+	# Log the number of abilities for debugging
+	print(\"Added \" + str(combatant.abilities.size()) + \" ability buttons for \" + combatant.name)
+
+func _on_ability_selected(index: int):
+	selected_ability = index
+	
+	# Enable/disable valid targets based on the ability's target type
+	var current_combatant = combat_system.turn_order[combat_system.current_turn_index]
+	var ability = current_combatant.abilities[selected_ability]
+	
+	# If it's a self-targeting ability, execute it immediately
+	if ability.target_type == Ability.TargetType.SELF:
+		combat_system.process_turn(selected_ability, current_combatant)
+		selected_ability = -1
+		# Clear ability buttons after turn completes
+		clear_ability_buttons()
+		return
+	
+	# Handle enemy targeting
+	for i in range(enemy_combatant_buttons.size()):
+		var enemy = combat_system.cpu_combatants[i]
+		var button = enemy_combatant_buttons[i]
+		
+		# Disconnect any existing connections
+		if button.is_connected(\"pressed\", Callable(self, \"_on_enemy_selected\")):
+			button.disconnect(\"pressed\", Callable(self, \"_on_enemy_selected\"))
+		
+		# Enable only for enemy-targeting abilities
+		button.disabled = enemy.is_defeated or ability.target_type != Ability.TargetType.ENEMY
+		
+		# Connect signal if button is enabled
+		if not button.disabled:
+			button.pressed.connect(func(): _on_enemy_selected(enemy))
+	
+	# Handle friendly targeting
+	for i in range(player_combatant_buttons.size()):
+		var player = combat_system.player_combatants[i]
+		var button = player_combatant_buttons[i]
+		
+		# Disconnect any existing connections
+		if button.is_connected(\"pressed\", Callable(self, \"_on_friendly_selected\")):
+			button.disconnect(\"pressed\", Callable(self, \"_on_friendly_selected\"))
+		
+		# For OTHER_FRIENDLY, disable the current combatant's button
+		var is_self = (player == current_combatant)
+		var can_target = false
+		
+		if ability.target_type == Ability.TargetType.FRIENDLY and not player.is_defeated:
+			can_target = true
+		elif ability.target_type == Ability.TargetType.OTHER_FRIENDLY and not player.is_defeated and not is_self:
+			can_target = true
+		
+		button.disabled = !can_target
+		
+		# Connect signal if button is enabled
+		if not button.disabled:
+			button.pressed.connect(func(): _on_friendly_selected(player))
+
+func _on_enemy_selected(enemy: Combatant):
+	if selected_ability >= 0:
+		combat_system.process_turn(selected_ability, enemy)
+		selected_ability = -1
+		# Clear ability buttons after turn completes
+		clear_ability_buttons()
+
+func _on_friendly_selected(friendly: Combatant):
+	if selected_ability >= 0:
+		combat_system.process_turn(selected_ability, friendly)
+		selected_ability = -1
+		# Clear ability buttons after turn completes
+		clear_ability_buttons()
+
+func _on_combat_log_updated(message: String):
+	log_container.text += message + \"\\n\"
+	log_container.scroll_to_line(log_container.get_line_count())
+
+func _on_turn_started(combatant: Combatant):
+	print(\"Turn started for \" + combatant.name + \" is_player=\" + str(combatant.is_player))
+	
+	if combatant.is_player:
+		update_ability_ui(combatant)
+		log_container.text += \"It's \" + combatant.display_name + \"'s turn!\\n\"
+	else:
+		log_container.text += \"It's \" + combatant.display_name + \"'s turn (CPU)!\\n\"
+	
+	# Disable all target selection until an ability is selected
+	for button in enemy_combatant_buttons + player_combatant_buttons:
+		button.disabled = true
+
+func _on_combat_ended(winner: String):
+	log_container.text += \"Combat has ended! \" + winner + \" wins!\\n\"
+	# Disable all combat UI elements
+	for button in ability_container.get_children():
+		button.disabled = true
+
+# Add a new function to clear ability buttons
+func clear_ability_buttons() -> void:
+	# Remove all ability buttons
+	for child in ability_container.get_children():
+		child.queue_free()"
 
 [node name="Main" type="Node2D"]
-script = ExtResource("1_aj1tq")
+script = SubResource("GDScript_itq2x")
 
 [node name="CombatSystem" type="Node" parent="."]
 script = ExtResource("1_ehj7o")
@@ -19,7 +545,7 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-script = ExtResource("2_6w5mw")
+script = SubResource("GDScript_godeb")
 combat_system = NodePath("../CombatSystem")
 log_container = NodePath("LogContainer")
 player_container = NodePath("PlayerContainer")

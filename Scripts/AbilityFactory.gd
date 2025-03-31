@@ -1,4 +1,5 @@
 # AbilityFactory.gd
+# AbilityFactory.gd updated for string-based damage types
 class_name AbilityFactory
 extends Node
 
@@ -17,7 +18,7 @@ static func create_damage_ability(
     description: String, 
     custom_message: String = "",
     mp_cost: int = 0,
-    damage_type: int = Ability.DamageType.PHYSICAL
+    damage_type_id: String = "physical"  # Now uses string ID
 ) -> Ability:
     var ability = Ability.new()
     ability.name = name
@@ -26,7 +27,7 @@ static func create_damage_ability(
     ability.description = description
     ability.effect_type = Ability.EffectType.DAMAGE
     ability.mp_cost = mp_cost
-    ability.damage_type = damage_type
+    ability.damage_type_id = damage_type_id
     
     if custom_message != "":
         ability.custom_message = custom_message
@@ -83,7 +84,7 @@ static func create_dot_ability(
     description: String, 
     custom_message: String = "",
     mp_cost: int = 0,
-    damage_type: int = Ability.DamageType.PHYSICAL
+    damage_type_id: String = "physical"  # Now uses string ID
 ) -> Ability:
     # First create the damage ability that will be applied on each tick
     var damage_ability = Ability.new()
@@ -91,7 +92,7 @@ static func create_dot_ability(
     damage_ability.power = damage_per_tick
     damage_ability.target_type = target_type
     damage_ability.effect_type = Ability.EffectType.DAMAGE
-    damage_ability.damage_type = damage_type
+    damage_ability.damage_type_id = damage_type_id
     damage_ability.custom_message = "{target} takes {power} damage from {effect}"
     
     # Create the status effect
