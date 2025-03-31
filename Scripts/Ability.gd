@@ -155,6 +155,32 @@ func execute(user, target, damage_manager = null):
 			else:
 				result = "%s used %s on %s!" % [user_name, name, target_name]
 			
+			# Apply the primary effect (damage)
+			if power > 0:
+				# Calculate damage like in the DAMAGE case
+				var damage = power
+				if user.get("physical_attack") != null and target.get("physical_defense") != null:
+					if damage_type_id == "physical": 
+						damage += int(power * (user.get_effective_physical_attack() / 100.0))
+						var reduction = int(damage * (target.get_effective_physical_defense() / 100.0))
+						damage = max(1, damage - reduction)
+					else:
+						damage += int(power * (user.get_effective_magic_attack() / 100.0))
+						var reduction = int(damage * (target.get_effective_magic_defense() / 100.0))
+						damage = max(1, damage - reduction)
+				
+				var actual_damage = target.take_damage(damage, damage_type_id)
+				result += "\n%s deals %d damage to %s!" % [user_name, actual_damage, target_name]
+			
+			# Apply status effect if one is set
+			if status_effect != null:
+				# Clone the status effect to ensure each application is unique
+				var effect_instance = status_effect.create_duplicate()
+				print("Applying status effect from MULTI: " + effect_instance.name)
+				var status_result = effect_instance.apply(target, user)
+				if status_result != "":
+					result += "\n" + status_result
+			
 			# Process additional effects
 			for effect in additional_effects:
 				if effect is Ability:
@@ -164,22 +190,10 @@ func execute(user, target, damage_manager = null):
 						result += "\n" + ability_result
 				elif effect is StatusEffect:
 					# Apply the additional status effect
-					if status_effect != null:
-						# Clone the status effect to ensure each application is unique
-						var effect_instance = status_effect.create_duplicate()
-						var status_result = effect_instance.apply(target, user)
-						
-						if custom_message != "":
-							result = custom_message.format({
-								"user": user_name, 
-								"target": target_name, 
-								"effect": status_effect.name,
-								"duration": status_effect.duration
-							})
-						else:
-							result += "\n%s used %s on %s! %s" % [user_name, name, target_name, status_result]
-					else:
-						result = "%s used %s but nothing happened!" % [user_name, name]
+					var effect_instance = effect.create_duplicate()
+					var status_result = effect_instance.apply(target, user)
+					if status_result != "":
+						result += "\n" + status_result
 	print("Executed ability: " + name + " with result: " + result)
 	return result
 	
