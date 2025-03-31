@@ -11,11 +11,6 @@ enum TriggerType {
 	ON_HEALING_RECEIVED
 }
 
-enum EffectBehavior {
-	APPLY_ABILITY,  # Default behavior - applies the ability
-	REDUCE_DAMAGE   # Special behavior for damage reduction
-}
-
 enum ExpiryBehavior {
 	NONE,           # Nothing special happens when effect expires
 	APPLY_ABILITY   # Apply another ability when this effect expires
@@ -83,17 +78,18 @@ class StatModifier:
 			
 			print("Removed " + stat_name + " modifier, restored to: " + str(original_value))
 
-# Add these as properties to the StatusEffect class
+# Properties for stat modifications
 @export var stat_modifiers: Array = []  # Will store StatModifier instances
 var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
 var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
+var damage_taken_percent_mod: float = 0.0  # % increase/decrease to damage taken
 
 # Add this method to initialize a stat modifier
 func add_stat_modifier(stat_name: String, modification_type: int, value: float) -> void:
 	var modifier = StatModifier.new(stat_name, modification_type, value)
 	stat_modifiers.append(modifier)
 
-# Add this to the apply method, after the return statement
+# Apply stat modifiers to the target
 func apply_stat_modifiers() -> void:
 	if target_combatant == null:
 		return
@@ -101,7 +97,7 @@ func apply_stat_modifiers() -> void:
 	for modifier in stat_modifiers:
 		modifier.apply(target_combatant)
 
-# Add this to the clean-up code when an effect expires or is removed
+# Remove stat modifiers from the target
 func remove_stat_modifiers() -> void:
 	if target_combatant == null:
 		return
@@ -116,11 +112,9 @@ func remove_stat_modifiers() -> void:
 @export var ability: Ability # The ability to apply when triggered
 
 # Enhanced status effects properties
-@export var effect_behavior: EffectBehavior = EffectBehavior.APPLY_ABILITY
 @export var expiry_behavior: ExpiryBehavior = ExpiryBehavior.NONE
 @export var stacking_behavior: StackingBehavior = StackingBehavior.REPLACE
 @export var expiry_ability: Ability = null # The ability to apply when this effect expires
-@export var damage_reduction_percent: int = 0 # For damage reduction effects
 
 # Runtime properties (not exported)
 var source_combatant: Combatant # Who applied this status effect
@@ -194,68 +188,25 @@ func find_existing_effect(target: Combatant) -> StatusEffect:
 	return null
 
 
-func trigger(damage = null):
+func trigger():
 	if remaining_turns <= 0:
 		return ""
 	
 	var result = ""
 	
-	match effect_behavior:
-		EffectBehavior.APPLY_ABILITY:
-			if ability != null:
-				# Make sure source and target combatants are valid
-				if source_combatant != null and target_combatant != null:
-					result = ability.execute(source_combatant, target_combatant)
-				else:
-					# Handle missing combatants gracefully
-					var source_name = source_combatant.name if source_combatant else "Unknown"
-					var target_name = target_combatant.name if target_combatant else "Unknown"
-					result = "Effect failed: missing source or target combatant"
-			else:
-				result = "Effect has no ability to apply"
-				
-		EffectBehavior.REDUCE_DAMAGE:
-			# For damage reduction, we'll modify the input damage parameter
-			if damage != null:
-				var reduction = int(float(damage) * (damage_reduction_percent / 100.0))
-				var reduced_damage = max(damage - reduction, 0)
-				
-				# Handle potential null target
-				var target_name = "Unknown"
-				if target_combatant != null:
-					target_name = target_combatant.display_name
-				
-				result = "%s's %s reduced damage from %d to %d!" % [
-					target_name, 
-					name, 
-					damage, 
-					reduced_damage
-				]
-				return reduced_damage
+	# Apply ability if one is set
+	if ability != null:
+		# Make sure source and target combatants are valid
+		if source_combatant != null and target_combatant != null:
+			result = ability.execute(source_combatant, target_combatant)
+		else:
+			# Handle missing combatants gracefully
+			var source_name = source_combatant.name if source_combatant else "Unknown"
+			var target_name = target_combatant.name if target_combatant else "Unknown"
+			result = "Effect failed: missing source or target combatant"
 	
 	# Decrement remaining duration
 	remaining_turns -= 1
-	
-	# Check if effect has expired
-	if remaining_turns <= 0:
-		# Get display name with proper fallbacks
-		var target_name = "Unknown"
-		if target_combatant != null:
-			target_name = target_combatant.display_name
-			
-		var expiry_message = "%s has worn off from %s!" % [name, target_name]
-		
-		# Handle expiry behavior
-		if expiry_behavior == ExpiryBehavior.APPLY_ABILITY and expiry_ability != null:
-			# Make sure source and target combatants are valid
-			if source_combatant != null and target_combatant != null:
-				var expiry_result = expiry_ability.execute(source_combatant, target_combatant)
-				expiry_message += "\n" + expiry_result
-			else:
-				expiry_message += "\nCouldn't apply expiry effect due to missing combatants"
-		
-		emit_signal("effect_expired", self)
-		return result + "\n" + expiry_message
 	
 	# Check if effect has expired
 	if remaining_turns <= 0:
@@ -283,28 +234,6 @@ func trigger(damage = null):
 		
 	return result
 
-# Method specifically for damage reduction effects 
-func reduce_damage(damage_amount):
-	if effect_behavior != EffectBehavior.REDUCE_DAMAGE:
-		return damage_amount
-	
-	# Calculate reduction/increase
-	var modification_factor = damage_reduction_percent / 100.0
-	var modified_damage = damage_amount
-	
-	if damage_reduction_percent >= 0:
-		# Positive percentage means damage reduction
-		var reduction = int(float(damage_amount) * modification_factor)
-		modified_damage = max(damage_amount - reduction, 0)
-		print("Reducing damage by " + str(damage_reduction_percent) + "%: " + str(damage_amount) + " -> " + str(modified_damage))
-	else:
-		# Negative percentage means damage increase
-		var increase = int(float(damage_amount) * abs(modification_factor))
-		modified_damage = damage_amount + increase
-		print("Increasing damage by " + str(abs(damage_reduction_percent)) + "%: " + str(damage_amount) + " -> " + str(modified_damage))
-	
-	return modified_damage
-
 # Method to create a duplicate with the same properties
 func create_duplicate() -> StatusEffect:
 	var newStatusEffect = StatusEffect.new()
@@ -313,14 +242,26 @@ func create_duplicate() -> StatusEffect:
 	newStatusEffect.duration = duration
 	newStatusEffect.trigger_type = trigger_type
 	newStatusEffect.ability = ability
-	newStatusEffect.effect_behavior = effect_behavior
 	newStatusEffect.expiry_behavior = expiry_behavior
 	newStatusEffect.stacking_behavior = stacking_behavior
 	newStatusEffect.expiry_ability = expiry_ability
-	newStatusEffect.damage_reduction_percent = damage_reduction_percent
 	newStatusEffect.unique_id = str(randi()) # Generate a new unique ID
 	newStatusEffect.remaining_turns = duration
 	newStatusEffect.source_resource = source_resource
+	
+	# Copy damage/healing modifiers
+	newStatusEffect.damage_dealt_percent_mod = damage_dealt_percent_mod
+	newStatusEffect.healing_dealt_percent_mod = healing_dealt_percent_mod
+	newStatusEffect.damage_taken_percent_mod = damage_taken_percent_mod
+	
+	# Copy stat modifiers
+	for modifier in stat_modifiers:
+		newStatusEffect.add_stat_modifier(
+			modifier.stat_name,
+			modifier.modification_type,
+			modifier.value
+		)
+	
 	return newStatusEffect
 
 # Static method to create a status effect from a resource

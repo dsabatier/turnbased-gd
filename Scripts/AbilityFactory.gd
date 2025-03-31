@@ -173,8 +173,7 @@ static func create_damage_reduction_ability(
     status.description = "Reduces incoming damage by %d%% for %d turns" % [reduction_percent, duration]
     status.duration = duration
     status.trigger_type = StatusEffect.TriggerType.ON_DAMAGE_TAKEN
-    status.effect_behavior = StatusEffect.EffectBehavior.REDUCE_DAMAGE
-    status.damage_reduction_percent = reduction_percent
+    status.damage_taken_percent_mod = reduction_percent  # Use the new property instead
     
     # Create the ability that applies the status effect
     var ability = Ability.new()
@@ -211,7 +210,6 @@ static func create_status_effect_with_expiry(
     status.duration = duration
     status.trigger_type = trigger_type
     status.ability = apply_ability
-    status.effect_behavior = StatusEffect.EffectBehavior.APPLY_ABILITY
     status.expiry_behavior = StatusEffect.ExpiryBehavior.APPLY_ABILITY
     status.expiry_ability = expiry_ability
     status.stacking_behavior = stacking_behavior
@@ -248,8 +246,7 @@ static func create_advanced_damage_reduction(
     status.description = "Reduces incoming damage by %d%% for %d turns" % [reduction_percent, duration]
     status.duration = duration
     status.trigger_type = StatusEffect.TriggerType.ON_DAMAGE_TAKEN
-    status.effect_behavior = StatusEffect.EffectBehavior.REDUCE_DAMAGE
-    status.damage_reduction_percent = reduction_percent
+    status.damage_taken_percent_mod = reduction_percent  # Use the new property instead
     status.stacking_behavior = stacking_behavior
     
     # Create the ability that applies the status effect

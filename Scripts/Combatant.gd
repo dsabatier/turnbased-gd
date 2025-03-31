@@ -57,13 +57,22 @@ func take_damage(amount: int, is_magical: bool = false) -> int:
 	# Apply any damage reduction effects from status effects
 	for effect in status_effects:
 		if effect.trigger_type == StatusEffect.TriggerType.ON_DAMAGE_TAKEN:
-			if effect.effect_behavior == StatusEffect.EffectBehavior.REDUCE_DAMAGE:
+			# Check if this effect modifies damage taken
+			if effect.damage_taken_percent_mod != 0:
 				var old_damage = reduced_amount
-				reduced_amount = effect.reduce_damage(reduced_amount)
+				var damage_mod = effect.damage_taken_percent_mod / 100.0
 				
-				# Debug output
-				print("Effect " + effect.name + " modified damage: " + str(old_damage) + " -> " + str(reduced_amount))
+				# Negative modifier means more damage, positive means less damage
+				if damage_mod > 0:
+					# Reduce damage
+					var reduction = int(old_damage * damage_mod)
+					reduced_amount = max(old_damage - reduction, 1)  # Minimum 1 damage
+				else:
+					# Increase damage
+					var increase = int(old_damage * abs(damage_mod))
+					reduced_amount = old_damage + increase
 				
+				# Generate appropriate message
 				if reduced_amount < old_damage:
 					damage_reduction_message += "%s's %s reduced damage from %d to %d!\n" % [
 						display_name,
@@ -91,12 +100,12 @@ func take_damage(amount: int, is_magical: bool = false) -> int:
 	if damage_reduction_message != "":
 		print(damage_reduction_message)
 	
-	# Trigger ON_DAMAGE_TAKEN effects that apply abilities (not reduction effects)
+	# Trigger ON_DAMAGE_TAKEN effects 
 	var effect_results = trigger_status_effects(StatusEffect.TriggerType.ON_DAMAGE_TAKEN)
 	
 	# Return the actual damage dealt after reductions
 	return reduced_amount
-	
+
 func heal(amount: int) -> void:
 	current_hp = min(max_hp, current_hp + amount)
 	emit_signal("hp_changed", current_hp, max_hp)
@@ -256,7 +265,6 @@ func _on_status_effect_expired(effect: StatusEffect) -> void:
 	# The effect.trigger method will handle applying the expiry effect if needed
 	remove_status_effect(effect)
 
-# Enhanced trigger_status_effects method to handle all trigger types
 func trigger_status_effects(trigger: int) -> Array[String]:
 	var results : Array[String] = []
 	
@@ -265,10 +273,6 @@ func trigger_status_effects(trigger: int) -> Array[String]:
 	
 	for effect in effects_to_trigger:
 		if effect.trigger_type == trigger:
-			# For damage reduction effects, we don't trigger them here
-			if effect.effect_behavior == StatusEffect.EffectBehavior.REDUCE_DAMAGE:
-				continue
-				
 			var result = effect.trigger()
 			if result != "":
 				results.append(result)

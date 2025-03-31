@@ -10,11 +10,6 @@ enum TriggerType {
     ON_HEALING_RECEIVED
 }
 
-enum EffectBehavior {
-    APPLY_ABILITY,  # Default behavior - applies the ability
-    REDUCE_DAMAGE   # Special behavior for damage reduction
-}
-
 enum ExpiryBehavior {
     NONE,           # Nothing special happens when effect expires
     APPLY_ABILITY   # Apply another ability when this effect expires
@@ -35,11 +30,9 @@ enum StackingBehavior {
 @export var ability: Resource # AbilityResource reference
 
 # Enhanced status effect properties
-@export_enum("Apply Ability", "Reduce Damage") var effect_behavior: int = EffectBehavior.APPLY_ABILITY
 @export_enum("None", "Apply Ability") var expiry_behavior: int = ExpiryBehavior.NONE
 @export_enum("Replace", "Refresh", "Add Duration", "Stack") var stacking_behavior: int = StackingBehavior.REPLACE
 @export var expiry_ability: Resource # AbilityResource reference for when effect expires
-@export_range(0, 100) var damage_reduction_percent: int = 0 # For damage reduction effects
 
 # Stat modification properties
 @export_group("Stat Modifications")
@@ -54,6 +47,7 @@ enum StackingBehavior {
 @export var modification_type: StatusEffect.StatModificationType = StatusEffect.StatModificationType.FLAT
 @export var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
 @export var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
+@export var damage_taken_percent_mod: float = 0.0  # % reduction to damage taken (positive = less damage)
 
 # Creates a StatusEffect instance from this resource
 func create_status_effect_instance() -> StatusEffect:
@@ -67,10 +61,8 @@ func create_status_effect_instance() -> StatusEffect:
     effect.trigger_type = trigger_type
     
     # Set behavior properties
-    effect.effect_behavior = effect_behavior
     effect.expiry_behavior = expiry_behavior
     effect.stacking_behavior = stacking_behavior
-    effect.damage_reduction_percent = damage_reduction_percent
     
     # Handle ability reference
     if ability is AbilityResource:
@@ -109,6 +101,7 @@ func create_status_effect_instance() -> StatusEffect:
     # Set damage and healing modifiers
     effect.damage_dealt_percent_mod = damage_dealt_percent_mod
     effect.healing_dealt_percent_mod = healing_dealt_percent_mod
+    effect.damage_taken_percent_mod = damage_taken_percent_mod
     
     # Store reference to this resource
     effect.source_resource = self
