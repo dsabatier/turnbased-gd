@@ -1,4 +1,4 @@
-# DamageTypeManager.gd (Minimal)
+# DamageTypeManager.gd (Updated for effective stats)
 class_name DamageTypeManager
 extends Node
 
@@ -62,12 +62,12 @@ func calculate_damage(base_damage: int, damage_type_id: String,
         "immune": false
     }
     
-    # 1. Apply basic stat scaling based on attacker
+    # 1. Apply basic stat scaling based on attacker's EFFECTIVE stats
     # Physical attacks scale with physical_attack, magical with magic_attack
     if damage_type_id == "physical" or damage_type_id == "pure":
-        modified_damage += int(base_damage * (attacker.physical_attack / 100.0))
+        modified_damage += int(base_damage * (attacker.get_effective_physical_attack() / 100.0))
     else:
-        modified_damage += int(base_damage * (attacker.magic_attack / 100.0))
+        modified_damage += int(base_damage * (attacker.get_effective_magic_attack() / 100.0))
     
     # 2. Check for resistances/weaknesses directly on the defender
     if defender.has_method("get_damage_resistance"):
@@ -84,12 +84,16 @@ func calculate_damage(base_damage: int, damage_type_id: String,
         # Apply resistance multiplier
         modified_damage = int(modified_damage * resistance)
     
-    # 3. Apply defense stat reduction if applicable
+    # 3. Apply defense stat reduction if applicable (using EFFECTIVE defense)
     if damage_type.has("defense_stat") and damage_type.defense_stat != null:
-        if defender.has_method("get"):
-            var defense = defender.get(damage_type.defense_stat)
-            var defense_reduction = int(modified_damage * (defense / 100.0))
-            modified_damage = max(1, modified_damage - defense_reduction)
+        var defense = 0
+        if damage_type.defense_stat == "physical_defense":
+            defense = defender.get_effective_physical_defense()
+        elif damage_type.defense_stat == "magic_defense":
+            defense = defender.get_effective_magic_defense()
+            
+        var defense_reduction = int(modified_damage * (defense / 100.0))
+        modified_damage = max(1, modified_damage - defense_reduction)
     
     # Return both the calculated damage and effect flags
     return {

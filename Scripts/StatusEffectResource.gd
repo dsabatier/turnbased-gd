@@ -45,9 +45,9 @@ enum StackingBehavior {
 @export var modify_max_mp: int = 0
 
 @export var modification_type: StatusEffect.StatModificationType = StatusEffect.StatModificationType.FLAT
+@export var damage_reduction_percent: float = 0
 @export var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
 @export var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
-@export var damage_taken_percent_mod: float = 0.0  # % reduction to damage taken (positive = less damage)
 
 # Creates a StatusEffect instance from this resource
 func create_status_effect_instance() -> StatusEffect:
@@ -76,34 +76,25 @@ func create_status_effect_instance() -> StatusEffect:
     elif expiry_ability is Ability:
         effect.expiry_ability = expiry_ability
     
-    # Add stat modifiers
-    if modify_physical_attack != 0:
-        effect.add_stat_modifier("physical_attack", modification_type, modify_physical_attack)
-    
-    if modify_magic_attack != 0:
-        effect.add_stat_modifier("magic_attack", modification_type, modify_magic_attack)
-    
-    if modify_physical_defense != 0:
-        effect.add_stat_modifier("physical_defense", modification_type, modify_physical_defense)
-    
-    if modify_magic_defense != 0:
-        effect.add_stat_modifier("magic_defense", modification_type, modify_magic_defense)
-    
-    if modify_speed != 0:
-        effect.add_stat_modifier("speed", modification_type, modify_speed)
-    
-    if modify_max_hp != 0:
-        effect.add_stat_modifier("max_hp", modification_type, modify_max_hp)
-    
-    if modify_max_mp != 0:
-        effect.add_stat_modifier("max_mp", modification_type, modify_max_mp)
+    # Set stat modification values
+    effect.modify_physical_attack = modify_physical_attack
+    effect.modify_magic_attack = modify_magic_attack
+    effect.modify_physical_defense = modify_physical_defense
+    effect.modify_magic_defense = modify_magic_defense
+    effect.modify_speed = modify_speed
+    effect.modify_max_hp = modify_max_hp
+    effect.modify_max_mp = modify_max_mp
+    effect.modification_type = modification_type
     
     # Set damage and healing modifiers
+    effect.damage_reduction_percent = damage_reduction_percent
     effect.damage_dealt_percent_mod = damage_dealt_percent_mod
     effect.healing_dealt_percent_mod = healing_dealt_percent_mod
-    effect.damage_taken_percent_mod = damage_taken_percent_mod
     
     # Store reference to this resource
     effect.source_resource = self
+    
+    print("Created status effect instance from resource: " + name)
+    print("Speed modifier: " + str(modify_speed) + "%")
     
     return effect

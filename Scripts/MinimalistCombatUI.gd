@@ -1,4 +1,4 @@
-# MinimalistCombatUI.gd - Updated for data-driven damage types
+# MinimalistCombatUI.gd - Fixed for has method issue
 extends Control
 
 @export var combat_system: CombatSystem
@@ -198,7 +198,7 @@ func _reset_combatant_dimming():
 func _on_combat_log_updated(message: String):
     log_text.text += message + "\n"
     # Make sure log scrolls to bottom
-    log_text.scroll_to_paragraph(log_text.get_paragraph_count() - 1)
+    log_text.scroll_to_line(log_text.get_paragraph_count() - 1)
 
 func _on_turn_started(combatant: Combatant):
     print("Turn started for: " + combatant.display_name + " (is_player: " + str(combatant.is_player) + ")")
@@ -259,46 +259,65 @@ func _show_abilities_for_combatant(combatant):
         var button = Button.new()
         button.custom_minimum_size = Vector2(0, 40)
         
-        # Create ability name text with MP cost if applicable
-        var ability_text = ability.name if ability.name else "Unknown Ability"
+        # Format the ability text to include MP cost if any
+        var mp_text = ""
+        if ability.get("mp_cost") != null:
+            mp_text = " [MP: " + str(ability.mp_cost) + "]"
+            
+            # Disable button if not enough MP
+            if combatant.current_mp < ability.mp_cost:
+                button.disabled = true
         
-        # Add damage type info if available using the DamageTypeManager
-        if ability.has_method("get") and ability.get("effect_type") == Ability.EffectType.DAMAGE and ability.get("damage_type_id") != null:
+        # Format ability text with damage type if applicable
+        var damage_type_text = ""
+        var power_text = ""
+        
+        if ability.get("effect_type") != null and ability.effect_type == Ability.EffectType.DAMAGE:
+            # Include damage type info
+            var damage_type_id = ability.get("damage_type_id") if ability.get("damage_type_id") != null else "physical"
             var damage_type_name = "Physical" # Default
             var damage_type_color = Color.WHITE
             
             if damage_manager:
                 # Get type info from the manager
-                var damage_type = damage_manager.get_damage_type(ability.damage_type_id)
+                var damage_type = damage_manager.get_damage_type(damage_type_id)
                 
                 if damage_type:
                     # Use the proper name from the config
-                    damage_type_name = damage_type.get("name", ability.damage_type_id.capitalize())
+                    damage_type_name = damage_type.get("name", damage_type_id.capitalize())
                     
                     # Use the color from the config if available
                     if damage_type.has("color"):
                         damage_type_color = Color(damage_type.color)
             else:
                 # Fallback if no manager - just capitalize the ID
-                damage_type_name = ability.damage_type_id.capitalize()
+                damage_type_name = damage_type_id.capitalize()
             
-            ability_text += " (" + damage_type_name + ")"
+            damage_type_text = " (" + damage_type_name + ")"
+            
+            # Calculate effective power based on combatant's stats
+            var base_power = ability.power
+            var effective_power = base_power
+            
+            if damage_type_id == "physical" or damage_type_id == "pure":
+                effective_power += int(base_power * (combatant.get_effective_physical_attack() / 100.0))
+            else:
+                effective_power += int(base_power * (combatant.get_effective_magic_attack() / 100.0))
+            
+            power_text = " [Power: " + str(effective_power) + "]"
             
             # Apply color to button text if possible
             button.add_theme_color_override("font_color", damage_type_color)
         
-        # Add MP cost if applicable
-        if ability.has_method("get") and ability.get("mp_cost") != null and ability.mp_cost > 0:
-            ability_text += " [MP: " + str(ability.mp_cost) + "]"
-            
-            # Disable button if not enough MP
-            if combatant.current_mp < ability.mp_cost:
-                button.disabled = true
+        # Show healing amount for healing abilities
+        elif ability.get("effect_type") != null and ability.effect_type == Ability.EffectType.HEALING:
+            power_text = " [Heal: " + str(ability.power) + "]"
+            button.add_theme_color_override("font_color", Color(0.2, 0.9, 0.2))
 
-        button.text = ability_text
+        button.text = ability.name + damage_type_text + power_text + mp_text
         
         # Add description as tooltip
-        if ability.has_method("get") and ability.get("description") != null:
+        if ability.get("description") != null:
             button.tooltip_text = ability.description
 
         # Connect button signal
@@ -392,7 +411,7 @@ func _show_target_selection(ability):
         
         var button = Button.new()
         button.custom_minimum_size = Vector2(0, 40)
-        button.text = target.display_name + " (" + str(target.current_hp) + "/" + str(target.max_hp) + ")"
+        button.text = target.display_name + " (" + str(target.current_hp) + "/" + str(target.get_effective_max_hp()) + ")"
         
         # Connect button signal
         button.pressed.connect(_on_target_selected.bind(target))

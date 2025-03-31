@@ -29,82 +29,6 @@ enum StatModificationType {
 	PERCENT  # Modify by a percentage
 }
 
-# Tracks which stats this effect modifies
-class StatModifier:
-	var stat_name: String = ""  # "physical_attack", "magic_defense", etc.
-	var modification_type: int = StatModificationType.FLAT
-	var value: float = 0.0
-	var applied: bool = false   # Tracks if this modifier has been applied
-	
-	func _init(stat: String, mod_type: int, val: float):
-		stat_name = stat
-		modification_type = mod_type
-		value = val
-		
-	# Apply the modification to a combatant
-	func apply(combatant: Combatant) -> void:
-		if applied:
-			return
-			
-		# Store original value if not already tracked
-		if not combatant.has_meta("original_" + stat_name):
-			combatant.set_meta("original_" + stat_name, combatant.get(stat_name))
-		
-		var original_value = combatant.get_meta("original_" + stat_name)
-		var new_value = original_value
-		
-		if modification_type == StatModificationType.FLAT:
-			new_value = original_value + value
-		else:  # PERCENT
-			new_value = original_value * (1 + value / 100.0)
-		
-		# Apply the new value
-		combatant.set(stat_name, new_value)
-		applied = true
-		
-		print("Applied " + stat_name + " modifier: " + str(value) + 
-			  " (original: " + str(original_value) + ", new: " + str(new_value) + ")")
-	
-	# Remove the modification from a combatant
-	func remove(combatant: Combatant) -> void:
-		if not applied:
-			return
-			
-		# Only restore if we have the original value
-		if combatant.has_meta("original_" + stat_name):
-			var original_value = combatant.get_meta("original_" + stat_name)
-			combatant.set(stat_name, original_value)
-			applied = false
-			
-			print("Removed " + stat_name + " modifier, restored to: " + str(original_value))
-
-# Properties for stat modifications
-@export var stat_modifiers: Array = []  # Will store StatModifier instances
-var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
-var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
-var damage_taken_percent_mod: float = 0.0  # % increase/decrease to damage taken
-
-# Add this method to initialize a stat modifier
-func add_stat_modifier(stat_name: String, modification_type: int, value: float) -> void:
-	var modifier = StatModifier.new(stat_name, modification_type, value)
-	stat_modifiers.append(modifier)
-
-# Apply stat modifiers to the target
-func apply_stat_modifiers() -> void:
-	if target_combatant == null:
-		return
-		
-	for modifier in stat_modifiers:
-		modifier.apply(target_combatant)
-
-# Remove stat modifiers from the target
-func remove_stat_modifiers() -> void:
-	if target_combatant == null:
-		return
-		
-	for modifier in stat_modifiers:
-		modifier.remove(target_combatant)
-
 @export var name: String
 @export var description: String
 @export var duration: int # Number of turns this effect lasts
@@ -115,6 +39,21 @@ func remove_stat_modifiers() -> void:
 @export var expiry_behavior: ExpiryBehavior = ExpiryBehavior.NONE
 @export var stacking_behavior: StackingBehavior = StackingBehavior.REPLACE
 @export var expiry_ability: Ability = null # The ability to apply when this effect expires
+
+# Direct stat modification values
+var modify_physical_attack: float = 0
+var modify_magic_attack: float = 0
+var modify_physical_defense: float = 0
+var modify_magic_defense: float = 0
+var modify_speed: float = 0
+var modify_max_hp: float = 0
+var modify_max_mp: float = 0
+var modification_type: StatModificationType = StatModificationType.PERCENT
+
+# Damage modifiers
+var damage_reduction_percent: float = 0
+var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
+var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
 
 # Runtime properties (not exported)
 var source_combatant: Combatant # Who applied this status effect
@@ -146,8 +85,6 @@ func apply(target: Combatant, source: Combatant):
 				# Remove the old effect and apply this one
 				target.remove_status_effect(existing_effect)
 				target.add_status_effect(self)
-				# Apply stat modifiers
-				apply_stat_modifiers()
 				return "%s's %s was replaced with a new instance!" % [target.display_name, name]
 				
 			StackingBehavior.REFRESH:
@@ -168,16 +105,11 @@ func apply(target: Combatant, source: Combatant):
 			StackingBehavior.STACK:
 				# Add this as a new instance
 				target.add_status_effect(self)
-				# Apply stat modifiers
-				apply_stat_modifiers()
 				return "%s was affected by another instance of %s for %d turns!" % [target.display_name, name, duration]
 	else:
 		# No existing effect, just add this one
 		target.add_status_effect(self)
-		# Apply stat modifiers
-		apply_stat_modifiers()
 		return "%s was affected by %s for %d turns!" % [target.display_name, name, duration]
-		
 
 # Find an existing effect of the same type on the target
 func find_existing_effect(target: Combatant) -> StatusEffect:
@@ -187,8 +119,8 @@ func find_existing_effect(target: Combatant) -> StatusEffect:
 			return effect
 	return null
 
-
 func trigger():
+	print("Triggering status effect " + name)
 	if remaining_turns <= 0:
 		return ""
 	
@@ -216,9 +148,6 @@ func trigger():
 			target_name = target_combatant.display_name
 			
 		var expiry_message = "%s has worn off from %s!" % [name, target_name]
-		
-		# Remove stat modifiers when the effect expires
-		remove_stat_modifiers()
 		
 		# Handle expiry behavior
 		if expiry_behavior == ExpiryBehavior.APPLY_ABILITY and expiry_ability != null:
@@ -249,18 +178,20 @@ func create_duplicate() -> StatusEffect:
 	newStatusEffect.remaining_turns = duration
 	newStatusEffect.source_resource = source_resource
 	
+	# Copy stat modifiers
+	newStatusEffect.modify_physical_attack = modify_physical_attack
+	newStatusEffect.modify_magic_attack = modify_magic_attack
+	newStatusEffect.modify_physical_defense = modify_physical_defense
+	newStatusEffect.modify_magic_defense = modify_magic_defense
+	newStatusEffect.modify_speed = modify_speed
+	newStatusEffect.modify_max_hp = modify_max_hp
+	newStatusEffect.modify_max_mp = modify_max_mp
+	newStatusEffect.modification_type = modification_type
+	
 	# Copy damage/healing modifiers
+	newStatusEffect.damage_reduction_percent = damage_reduction_percent
 	newStatusEffect.damage_dealt_percent_mod = damage_dealt_percent_mod
 	newStatusEffect.healing_dealt_percent_mod = healing_dealt_percent_mod
-	newStatusEffect.damage_taken_percent_mod = damage_taken_percent_mod
-	
-	# Copy stat modifiers
-	for modifier in stat_modifiers:
-		newStatusEffect.add_stat_modifier(
-			modifier.stat_name,
-			modifier.modification_type,
-			modifier.value
-		)
 	
 	return newStatusEffect
 
