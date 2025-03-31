@@ -168,9 +168,35 @@ func use_mp(amount: int) -> bool:
 		return true
 	return false
 	
-func restore_mp(amount: int) -> void:
-	current_mp = min(get_effective_max_mp(), current_mp + amount)
-	emit_signal("mp_changed", current_mp, max_mp)
+func restore_mp(amount: int) -> int:
+	# Store original amount for return value
+	var original_amount = amount
+	
+	# Calculate effective max MP
+	var effective_max = get_effective_max_mp()
+	
+	# Apply any MP restoration modifiers from status effects
+	# This would allow future status effects to boost MP regeneration
+	var mp_modifier = 1.0
+	for effect in status_effects:
+		if effect.has_method("get") and effect.get("mp_restoration_mod") != null:
+			mp_modifier += effect.mp_restoration_mod / 100.0
+	
+	# Apply the modifier to the amount
+	amount = int(amount * mp_modifier)
+	
+	# Update MP, capped at max
+	var old_mp = current_mp
+	current_mp = min(effective_max, current_mp + amount)
+	
+	# Calculate actual MP restored
+	var actual_restored = current_mp - old_mp
+	
+	# Emit signal for UI updates
+	emit_signal("mp_changed", current_mp, effective_max)
+	
+	# Return the actual amount restored (for logging)
+	return actual_restored
 
 # Use an ability
 func use_ability(ability_index: int, target = null) -> String:
@@ -197,8 +223,8 @@ func use_ability(ability_index: int, target = null) -> String:
 	
 	# Handle SELF target type automatically
 	if ability.target_type == Ability.TargetType.SELF:
-		# Consume MP if needed
-		if mp_cost > 0:
+		# Consume MP if needed (unless it's an MP restore ability)
+		if mp_cost > 0 and ability.effect_type != Ability.EffectType.MP_RESTORE:
 			use_mp(mp_cost)
 			
 		# Try to get the damage manager from the scene
@@ -229,7 +255,7 @@ func use_ability(ability_index: int, target = null) -> String:
 		
 	print("Executing ability: " + ability.name + " on target: " + target.display_name)
 	return ability.execute(self, target, damage_manager)
-
+	
 # AI logic for CPU-controlled combatants
 func choose_action(friendlies: Array, enemies: Array):
 	if is_defeated:

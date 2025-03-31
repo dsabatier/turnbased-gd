@@ -5,12 +5,12 @@
 [resource]
 script = ExtResource("1_8yt22")
 name = "Soul Siphon"
-power = 0
+power = 30
 target_type = 2
 description = "Drains ambient souls to restore MP"
-effect_type = 3
+effect_type = 5
 custom_message = "{user} draws in souls from the ether, restoring 30 MP!"
 mp_cost = 0
-damage_type = 0
+damage_type_id = "physical"
 additional_effects = Array[Resource]([])
 apply_all_effects = true

@@ -3,7 +3,7 @@ class_name Ability
 extends Resource
 
 enum TargetType {ENEMY, FRIENDLY, SELF, OTHER_FRIENDLY, ANY}
-enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI}
+enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI, MP_RESTORE}
 
 @export var name: String
 @export var power: int
@@ -194,6 +194,21 @@ func execute(user, target, damage_manager = null):
 					var status_result = effect_instance.apply(target, user)
 					if status_result != "":
 						result += "\n" + status_result
+		EffectType.MP_RESTORE:
+			# Handle MP restoration
+			var mp_amount = power
+			
+			# Apply the MP restoration to the target
+			target.restore_mp(mp_amount)
+			
+			if custom_message != "":
+				result = custom_message.format({
+					"user": user_name, 
+					"target": target_name, 
+					"power": mp_amount
+				})
+			else:
+				result = "%s used %s to restore %d MP to %s!" % [user_name, name, mp_amount, target_name]
 	print("Executed ability: " + name + " with result: " + result)
 	return result
 	

@@ -291,25 +291,25 @@ static func create_multi_effect_ability(
 
 # Create an MP restore ability
 static func create_mp_restore_ability(
-    name: String,
-    mp_amount: int,
-    target_type: int,
-    description: String,
+    name: String, 
+    mp_amount: int, 
+    target_type: int, 
+    description: String, 
     custom_message: String = "",
     mp_cost: int = 0
 ) -> Ability:
-    # Custom ability for MP restoration
     var ability = Ability.new()
     ability.name = name
+    ability.power = mp_amount  # Power represents MP amount for MP_RESTORE
     ability.target_type = target_type
     ability.description = description
-    ability.effect_type = Ability.EffectType.UTILITY
+    ability.effect_type = Ability.EffectType.MP_RESTORE
     ability.mp_cost = mp_cost
     
-    # Set custom message
     if custom_message != "":
         ability.custom_message = custom_message
     else:
         ability.custom_message = "{user} restores {power} MP to {target}!"
-    
+        
     return ability
+

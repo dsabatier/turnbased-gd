@@ -4,14 +4,14 @@ extends Resource
 
 # Enums (same as in Ability.gd for compatibility)
 enum TargetType {ENEMY, FRIENDLY, SELF, OTHER_FRIENDLY, ANY}
-enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI}
+enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI, MP_RESTORE}
 
 # Core properties
 @export var name: String = ""
 @export var power: int = 0
 @export_enum("Enemy", "Friendly", "Self", "Other Friendly", "Any") var target_type: int = TargetType.ENEMY
 @export_multiline var description: String = ""
-@export_enum("Damage", "Healing", "Status", "Utility", "Multi-Effect") var effect_type: int = EffectType.DAMAGE
+@export_enum("Damage", "Healing", "Status", "Utility", "Multi-Effect", "MP") var effect_type: int = EffectType.DAMAGE
 @export var custom_message: String = ""
 @export var mp_cost: int = 0
 

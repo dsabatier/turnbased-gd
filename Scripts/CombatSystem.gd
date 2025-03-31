@@ -115,12 +115,8 @@ func process_turn(ability_index: int, target_combatant: Combatant = null) -> voi
 			if ability.target_type == Ability.TargetType.SELF and target_combatant == null:
 				target_combatant = current_combatant
 				
-			# Special handling for the Skip Turn ability to restore MP
-			if ability.name.begins_with("Skip") or ability.name.begins_with("Meditate"):
-				# Restore some MP when skipping a turn
-				var mp_restore = 15
-				current_combatant.restore_mp(mp_restore)
-				add_log("%s meditates and restores %d MP!" % [current_combatant.display_name, mp_restore])
+			# Remove special case handling for Skip Turn - now handled by MP_RESTORE type
+			# No more special handling here
 
 			var result = current_combatant.use_ability(ability_index, target_combatant)
 			add_log(result)

@@ -180,7 +180,13 @@ func create_example_combatants() -> Array:
             15, 
             "poison"  # Use string ID instead of enum
         ),
-        AbilityFactory.create_skip_turn_ability("Meditate", "Restore 15 MP")
+        AbilityFactory.create_mp_restore_ability(
+			"Meditate", 
+			15,  # Restore 15 MP
+			Ability.TargetType.SELF, 
+			"Restore 15 MP", 
+			"{user} meditates and restores {power} MP!"
+    )
     ]
     
     # Create a cleric
