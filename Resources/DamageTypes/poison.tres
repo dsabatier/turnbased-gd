@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DamageTypeResource" load_steps=2 format=3 uid="uid://bcfx0luiy23xj"]
+
+[ext_resource type="Script" path="res://Scripts/DamageTypeResource.gd" id="1_6jrfi"]
+
+[resource]
+script = ExtResource("1_6jrfi")
+id = "poison"
+name = "Poison"
+description = "Toxic damage that can poison targets"
+color = Color(0.466667, 1, 0.466667, 1)
+defense_stat = "magic_defense"

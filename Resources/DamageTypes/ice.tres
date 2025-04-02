@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DamageTypeResource" load_steps=2 format=3 uid="uid://5o05p456ivfn"]
+
+[ext_resource type="Script" path="res://Scripts/DamageTypeResource.gd" id="1_b0xu8"]
+
+[resource]
+script = ExtResource("1_b0xu8")
+id = "ice"
+name = "Ice"
+description = "Freezing damage that can slow enemies"
+color = Color(0.466667, 0.866667, 1, 1)
+defense_stat = "magic_defense"

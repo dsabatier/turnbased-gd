@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DamageTypeResource" load_steps=2 format=3 uid="uid://cdipeudtht0oa"]
+
+[ext_resource type="Script" path="res://Scripts/DamageTypeResource.gd" id="1_hu16d"]
+
+[resource]
+script = ExtResource("1_hu16d")
+id = "magical"
+name = "Magical"
+description = "Arcane energy that bypasses physical defenses"
+color = Color(0.466667, 0.466667, 1, 1)
+defense_stat = "magic_defense"

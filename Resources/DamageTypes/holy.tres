@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="DamageTypeResource" load_steps=2 format=3 uid="uid://bv2e47f6yw1xd"]
+
+[ext_resource type="Script" path="res://Scripts/DamageTypeResource.gd" id="1_21k7y"]
+
+[resource]
+script = ExtResource("1_21k7y")
+id = "holy"
+name = "Holy"
+description = "Divine energy effective against undead"
+color = Color(1, 1, 0.666667, 1)
+defense_stat = "magic_defense"
