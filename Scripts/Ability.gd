@@ -1,4 +1,4 @@
-# Ability.gd updated for data-driven damage types (Fixed)
+# Ability.gd updated for resource-based damage types
 class_name Ability
 extends Resource
 
@@ -12,7 +12,11 @@ enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI, MP_RESTORE}
 @export var effect_type: EffectType = EffectType.DAMAGE
 @export var custom_message: String = ""  # Custom message to display when used
 @export var mp_cost: int = 0  # MP cost to use this ability
-@export var damage_type_id: String = "physical"  # String ID that references damage_types.json
+
+# Use DamageTypeResource instead of string ID
+@export var damage_type: Resource = null  # DamageTypeResource reference
+# Keep for backward compatibility and internal use
+var damage_type_id: String = "physical"  # Will be set from damage_type.id
 
 # For status effect abilities
 @export var status_effect: StatusEffect = null
@@ -23,6 +27,18 @@ enum EffectType {DAMAGE, HEALING, STATUS, UTILITY, MULTI, MP_RESTORE}
 
 # Reference to source resource (if created from a resource)
 var source_resource: Resource = null
+
+# Get the defense stat to use based on the damage type
+func get_defense_stat() -> String:
+	if damage_type and damage_type is DamageTypeResource:
+		return damage_type.defense_stat
+	return "physical_defense" # Default fallback
+
+# Returns the actual damage type ID, preferring DamageTypeResource if available
+func get_damage_type_id() -> String:
+	if damage_type and damage_type is DamageTypeResource:
+		return damage_type.id
+	return damage_type_id
 
 # Updated execute method to use the damage type system - now accepts the damage manager
 func execute(user, target, damage_manager = null):
@@ -39,19 +55,24 @@ func execute(user, target, damage_manager = null):
 				# Fall back to simple damage calculation
 				var damage = power
 				if user.has_method("get") and target.has_method("get"):
-					# Apply simple stat calculation
-					if damage_type_id == "physical": 
+						# Use defense_stat from the damage type resource
+					var defense_stat = get_defense_stat()
+					
+					if defense_stat == "physical_defense":
 						damage += int(power * (user.physical_attack / 100.0))
-						# Reduce by defense
+						# Reduce by physical defense
 						var reduction = int(damage * (target.physical_defense / 100.0))
 						damage = max(1, damage - reduction)
-					else:
+					elif defense_stat == "magic_defense":
 						damage += int(power * (user.magic_attack / 100.0))
 						# Reduce by magic defense
 						var reduction = int(damage * (target.magic_defense / 100.0))
 						damage = max(1, damage - reduction)
+					else: # "none" or other special cases
+						damage += int(power * (user.physical_attack / 100.0))
+						# No reduction for pure damage
 						
-				var actual_damage = target.take_damage(damage, damage_type_id)
+				var actual_damage = target.take_damage(damage, get_damage_type_id())
 				
 				if custom_message != "":
 					result = custom_message.format({
@@ -64,7 +85,7 @@ func execute(user, target, damage_manager = null):
 					result = "%s used %s on %s for %d damage!" % [user_name, name, target_name, actual_damage]
 			else:
 				# Use the data-driven damage system
-				var damage_result = damage_manager.calculate_damage(power, damage_type_id, user, target)
+				var damage_result = damage_manager.calculate_damage(power, get_damage_type_id(), user, target)
 				
 				# Apply the damage
 				var apply_result = damage_manager.apply_damage_result(damage_result, user, target)
@@ -78,8 +99,12 @@ func execute(user, target, damage_manager = null):
 						"effect": name
 					})
 				else:
-					var damage_type = damage_manager.get_damage_type(damage_type_id)
-					var type_name = damage_type.get("name", damage_type_id.capitalize())
+					var type_name = "Physical"
+					if damage_type and damage_type is DamageTypeResource:
+						type_name = damage_type.name
+					else:
+						var damage_type_data = damage_manager.get_damage_type(get_damage_type_id())
+						type_name = damage_type_data.get("name", get_damage_type_id().capitalize())
 					
 					# Build message based on results
 					if damage_result.flags.weak:
@@ -157,19 +182,24 @@ func execute(user, target, damage_manager = null):
 			
 			# Apply the primary effect (damage)
 			if power > 0:
-				# Calculate damage like in the DAMAGE case
+				# Calculate damage using defense_stat from damage_type
 				var damage = power
 				if user.get("physical_attack") != null and target.get("physical_defense") != null:
-					if damage_type_id == "physical": 
+					var defense_stat = get_defense_stat()
+					
+					if defense_stat == "physical_defense":
 						damage += int(power * (user.get_effective_physical_attack() / 100.0))
 						var reduction = int(damage * (target.get_effective_physical_defense() / 100.0))
 						damage = max(1, damage - reduction)
-					else:
+					elif defense_stat == "magic_defense":
 						damage += int(power * (user.get_effective_magic_attack() / 100.0))
 						var reduction = int(damage * (target.get_effective_magic_defense() / 100.0))
 						damage = max(1, damage - reduction)
+					else: # "none" or other special cases
+						damage += int(power * (user.get_effective_physical_attack() / 100.0))
+						# No reduction for pure damage
 				
-				var actual_damage = target.take_damage(damage, damage_type_id)
+				var actual_damage = target.take_damage(damage, get_damage_type_id())
 				result += "\n%s deals %d damage to %s!" % [user_name, actual_damage, target_name]
 			
 			# Apply status effect if one is set
@@ -225,6 +255,7 @@ func create_copy():
 	new_ability.additional_effects = additional_effects.duplicate()
 	new_ability.apply_all_effects = apply_all_effects
 	new_ability.mp_cost = mp_cost
+	new_ability.damage_type = damage_type
 	new_ability.damage_type_id = damage_type_id
 	new_ability.source_resource = source_resource
 	return new_ability
@@ -238,3 +269,17 @@ static func from_resource(ability_resource: AbilityResource) -> Ability:
 # Check if this ability was created from a resource
 func is_from_resource() -> bool:
 	return source_resource != null
+
+# Load damage type ID when damage_type resource is set
+func set_damage_type(new_damage_type):
+	damage_type = new_damage_type
+	if damage_type and damage_type is DamageTypeResource:
+		damage_type_id = damage_type.id
+	else:
+		damage_type_id = "physical"  # Default
+
+# Called when the node enters the scene tree for the first time.
+func _init():
+	# Initialize damage type ID if damage type resource is set
+	if damage_type and damage_type is DamageTypeResource:
+		damage_type_id = damage_type.id
