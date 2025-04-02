@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="AbilityResource" load_steps=3 format=3 uid="uid://dfj8rqumak3yk"]
 
 [ext_resource type="Script" path="res://Scripts/AbilityResource.gd" id="1_dckv2"]
-[ext_resource type="Resource" uid="uid://cjn32qrdgxfmk" path="res://Resources/Abilities/StatusEffects/berserk_effect.tres" id="2_yvuft"]
+[ext_resource type="Resource" uid="uid://d12343wkc10o1" path="res://Resources/Abilities/StatusEffects/berserk_effect.tres" id="2_yvuft"]
 
 [resource]
 script = ExtResource("1_dckv2")
@@ -12,7 +12,7 @@ description = "Enter a berserk state, increasing damage dealt by 40% but taking 
 effect_type = 2
 custom_message = "{user} enters a berserk rage, becoming more dangerous but vulnerable!"
 mp_cost = 25
-damage_type = 0
+damage_type_id = "physical"
 status_effect = ExtResource("2_yvuft")
 additional_effects = Array[Resource]([])
 apply_all_effects = true

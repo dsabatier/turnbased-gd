@@ -12,7 +12,7 @@ static func create_from_resource(resource_path: String) -> Ability:
 
 # Create a basic damage ability
 static func create_damage_ability(
-    name: String, 
+    ability_name: String, 
     power: int, 
     target_type: int, 
     description: String, 
@@ -21,7 +21,7 @@ static func create_damage_ability(
     damage_type_id: String = "physical"  # Now uses string ID
 ) -> Ability:
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.power = power
     ability.target_type = target_type
     ability.description = description
@@ -36,7 +36,7 @@ static func create_damage_ability(
 
 # Create a basic healing ability
 static func create_healing_ability(
-    name: String, 
+    ability_name: String, 
     power: int, 
     target_type: int, 
     description: String, 
@@ -44,7 +44,7 @@ static func create_healing_ability(
     mp_cost: int = 0
 ) -> Ability:
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.power = power
     ability.target_type = target_type
     ability.description = description
@@ -58,12 +58,12 @@ static func create_healing_ability(
 
 # Create a skip turn ability
 static func create_skip_turn_ability(
-    name: String, 
+    ability_name: String, 
     description: String, 
     custom_message: String = ""
 ) -> Ability:
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.power = 0  # No direct effect on HP
     ability.target_type = Ability.TargetType.SELF  # Only affects the caster
     ability.description = description
@@ -77,7 +77,7 @@ static func create_skip_turn_ability(
 
 # Create a damage over time ability
 static func create_dot_ability(
-    name: String, 
+    ability_name: String, 
     damage_per_tick: int, 
     duration: int, 
     target_type: int, 
@@ -88,7 +88,7 @@ static func create_dot_ability(
 ) -> Ability:
     # First create the damage ability that will be applied on each tick
     var damage_ability = Ability.new()
-    damage_ability.name = name + " (DoT)"
+    damage_ability.name = ability_name + " (DoT)"
     damage_ability.power = damage_per_tick
     damage_ability.target_type = target_type
     damage_ability.effect_type = Ability.EffectType.DAMAGE
@@ -97,7 +97,7 @@ static func create_dot_ability(
     
     # Create the status effect
     var status = StatusEffect.new()
-    status.name = name + " Effect"
+    status.name = ability_name + " Effect"
     status.description = "Taking %d damage at the end of each turn for %d turns" % [damage_per_tick, duration]
     status.duration = duration
     status.trigger_type = StatusEffect.TriggerType.TURN_END
@@ -105,7 +105,7 @@ static func create_dot_ability(
     
     # Create the ability that applies the status effect
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.target_type = target_type
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
@@ -120,7 +120,7 @@ static func create_dot_ability(
 
 # Create a heal over time ability
 static func create_hot_ability(
-    name: String, 
+    ability_name: String, 
     healing_per_tick: int, 
     duration: int, 
     target_type: int, 
@@ -130,14 +130,14 @@ static func create_hot_ability(
 ) -> Ability:
     # First create the healing ability that will be applied on each tick
     var healing_ability = Ability.new()
-    healing_ability.name = name + " (HoT)"
+    healing_ability.name = ability_name + " (HoT)"
     healing_ability.power = healing_per_tick
     healing_ability.target_type = target_type
     healing_ability.effect_type = Ability.EffectType.HEALING
     
     # Create the status effect
     var status = StatusEffect.new()
-    status.name = name + " Effect"
+    status.name = ability_name + " Effect"
     status.description = "Healing %d HP at the start of each turn for %d turns" % [healing_per_tick, duration]
     status.duration = duration
     status.trigger_type = StatusEffect.TriggerType.TURN_START
@@ -145,7 +145,7 @@ static func create_hot_ability(
     
     # Create the ability that applies the status effect
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.target_type = target_type
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
@@ -160,7 +160,7 @@ static func create_hot_ability(
 
 # Create a damage reduction ability
 static func create_damage_reduction_ability(
-    name: String, 
+    ability_name: String, 
     reduction_percent: int, 
     duration: int, 
     target_type: int, 
@@ -170,7 +170,7 @@ static func create_damage_reduction_ability(
 ) -> Ability:
     # Create the status effect for damage reduction
     var status = StatusEffect.new()
-    status.name = name + " Effect"
+    status.name = ability_name + " Effect"
     status.description = "Reduces incoming damage by %d%% for %d turns" % [reduction_percent, duration]
     status.duration = duration
     status.trigger_type = StatusEffect.TriggerType.ON_DAMAGE_TAKEN
@@ -178,7 +178,7 @@ static func create_damage_reduction_ability(
     
     # Create the ability that applies the status effect
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.target_type = target_type
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
@@ -193,7 +193,7 @@ static func create_damage_reduction_ability(
 
 # Create a status effect ability with an expiry effect
 static func create_status_effect_with_expiry(
-    name: String, 
+    ability_name: String, 
     duration: int,
     target_type: int, 
     description: String,
@@ -206,7 +206,7 @@ static func create_status_effect_with_expiry(
 ) -> Ability:
     # Create the status effect
     var status = StatusEffect.new()
-    status.name = name + " Effect"
+    status.name = ability_name + " Effect"
     status.description = description
     status.duration = duration
     status.trigger_type = trigger_type
@@ -217,7 +217,7 @@ static func create_status_effect_with_expiry(
     
     # Create the ability that applies the status effect
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.target_type = target_type
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
@@ -232,7 +232,7 @@ static func create_status_effect_with_expiry(
 
 # Create a damage reduction ability with specific stacking behavior
 static func create_advanced_damage_reduction(
-    name: String, 
+    ability_name: String, 
     reduction_percent: int, 
     duration: int, 
     target_type: int, 
@@ -243,7 +243,7 @@ static func create_advanced_damage_reduction(
 ) -> Ability:
     # Create the status effect for damage reduction
     var status = StatusEffect.new()
-    status.name = name + " Effect"
+    status.name = ability_name + " Effect"
     status.description = "Reduces incoming damage by %d%% for %d turns" % [reduction_percent, duration]
     status.duration = duration
     status.trigger_type = StatusEffect.TriggerType.ON_DAMAGE_TAKEN
@@ -252,7 +252,7 @@ static func create_advanced_damage_reduction(
     
     # Create the ability that applies the status effect
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.target_type = target_type
     ability.description = description
     ability.effect_type = Ability.EffectType.STATUS
@@ -267,7 +267,7 @@ static func create_advanced_damage_reduction(
 
 # Create a multi-effect ability that applies multiple effects at once
 static func create_multi_effect_ability(
-    name: String,
+    ability_name: String,
     target_type: int,
     description: String,
     effects: Array,
@@ -276,7 +276,7 @@ static func create_multi_effect_ability(
 ) -> Ability:
     # Create the multi-effect ability
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.target_type = target_type
     ability.description = description
     ability.effect_type = Ability.EffectType.MULTI
@@ -291,7 +291,7 @@ static func create_multi_effect_ability(
 
 # Create an MP restore ability
 static func create_mp_restore_ability(
-    name: String, 
+    ability_name: String, 
     mp_amount: int, 
     target_type: int, 
     description: String, 
@@ -299,7 +299,7 @@ static func create_mp_restore_ability(
     mp_cost: int = 0
 ) -> Ability:
     var ability = Ability.new()
-    ability.name = name
+    ability.name = ability_name
     ability.power = mp_amount  # Power represents MP amount for MP_RESTORE
     ability.target_type = target_type
     ability.description = description

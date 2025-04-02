@@ -18,6 +18,6 @@ modify_speed = 0
 modify_max_hp = 0
 modify_max_mp = 0
 modification_type = 1
+damage_reduction_percent = 0.0
 damage_dealt_percent_mod = 40.0
 healing_dealt_percent_mod = 0.0
-damage_taken_percent_mod = 20.0
