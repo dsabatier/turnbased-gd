@@ -58,11 +58,13 @@ func initialize(combatant_resource: CombatantResource, is_player_combatant: bool
 	
 	# Copy damage resistances
 	for resistance in combatant_resource.damage_resistances:
-		damage_resistances.append(resistance)
+		if resistance:
+			damage_resistances.append(resistance)
 	
 	# Copy abilities
 	for ability in combatant_resource.abilities:
-		abilities.append(ability)
+		if ability:
+			abilities.append(ability)
 
 # Get modified stat value (base + all modifications from status effects)
 func get_modified_stat(stat_name: String) -> int:
@@ -172,9 +174,13 @@ func process_status_effects(trigger_type: int) -> void:
 
 # Apply the result of an effect (damage, healing, etc.)
 func apply_effect_result(effect: StatusEffect) -> void:
-	# This would implement the effect's actual impact
-	# For example, DoT, HoT, stat changes, etc.
-	pass
+	# Process recurring effects (DoT/HoT)
+	if effect.recurring_effect_type == EffectResource.EffectType.Damage:
+		# Damage over time
+		take_damage(effect.recurring_effect_power)
+	elif effect.recurring_effect_type == EffectResource.EffectType.Healing:
+		# Healing over time
+		heal(effect.recurring_effect_power)
 
 # Remove a status effect
 func remove_status_effect(effect: StatusEffect) -> void:

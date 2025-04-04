@@ -1,4 +1,4 @@
-# CombatantResource.gd with damage resistances
+# CombatantResource.gd
 class_name CombatantResource
 extends Resource
 
@@ -17,9 +17,12 @@ extends Resource
 @export var magic_defense: int = 10
 @export var speed: int = 10
 
+# Team flags
+@export_group("Team Settings")
+@export var is_playable: bool = true
+
 # Damage resistances 
 @export_group("Resistances and Weaknesses")
-
 @export var damage_resistances: Array[DamageTypeResource]
 
 @export_group("Actions")

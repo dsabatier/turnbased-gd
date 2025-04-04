@@ -9,6 +9,7 @@ signal party_selection_complete(player_team, enemy_team)
 @onready var enemy_roster = $HBoxContainer/EnemySection/RosterGrid
 @onready var enemy_party = $HBoxContainer/EnemySection/PartyContainer
 @onready var start_button = $StartButton
+@onready var back_button = $BackButton
 
 # Reference to the combatant card scene
 var combatant_card_scene = preload("res://Scenes/roster_card.tscn")
@@ -24,15 +25,26 @@ func _ready() -> void:
 	# Disable start button until valid selections are made
 	start_button.disabled = true
 	
+	# Connect signals
+	start_button.pressed.connect(_on_start_button_pressed)
+	back_button.pressed.connect(_on_back_button_pressed)
+	
 	# Populate the roster grids
 	_populate_player_roster()
 	_populate_enemy_roster()
-	
-	# Connect signals
-	start_button.pressed.connect(_on_start_button_pressed)
 
 func _populate_player_roster() -> void:
+	# Clear any existing children first
+	for child in player_roster.get_children():
+		child.queue_free()
+	
+	# Get player characters from database
 	var combatants = CombatantDatabase.get_playable_combatants()
+	
+	# If no playable combatants, make sure demo ones are created
+	if combatants.is_empty():
+		CombatantDatabase._ensure_demo_combatants()
+		combatants = CombatantDatabase.get_playable_combatants()
 	
 	for combatant in combatants:
 		var card = combatant_card_scene.instantiate()
@@ -41,7 +53,17 @@ func _populate_player_roster() -> void:
 		player_roster.add_child(card)
 
 func _populate_enemy_roster() -> void:
+	# Clear any existing children first
+	for child in enemy_roster.get_children():
+		child.queue_free()
+	
+	# Get enemy characters from database
 	var combatants = CombatantDatabase.get_enemy_combatants()
+	
+	# If no enemy combatants, make sure demo ones are created
+	if combatants.is_empty():
+		CombatantDatabase._ensure_demo_combatants()
+		combatants = CombatantDatabase.get_enemy_combatants()
 	
 	for combatant in combatants:
 		var card = combatant_card_scene.instantiate()
@@ -128,8 +150,18 @@ func _update_start_button() -> void:
 	start_button.disabled = selected_player_combatants.is_empty() or selected_enemy_combatants.is_empty()
 
 func _on_start_button_pressed() -> void:
+	# Save selected teams to the global TeamSelection singleton
+	var team_selection = get_node("/root/TeamSelection")
+	if team_selection:
+		team_selection.player_team = selected_player_combatants
+		team_selection.enemy_team = selected_enemy_combatants
+	
 	# Emit signal with selected teams
 	emit_signal("party_selection_complete", selected_player_combatants, selected_enemy_combatants)
 	
 	# Load combat scene
 	get_tree().change_scene_to_file("res://Scenes/combat.tscn")
+
+func _on_back_button_pressed() -> void:
+	# Return to main menu
+	get_tree().change_scene_to_file("res://Scenes/start_menu.tscn")

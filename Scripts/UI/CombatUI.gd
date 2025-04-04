@@ -1,13 +1,16 @@
 # CombatUI.gd
 extends Control
 
+signal continue_combat
+
 # References to UI elements
-@onready var player_container = $CombatLayout/PlayerContainer
-@onready var enemy_container = $CombatLayout/EnemyContainer
-@onready var action_panel = $ActionPanel
-@onready var ability_list = $ActionPanel/AbilityList
-@onready var status_label = $StatusLabel
-@onready var target_cursor = $TargetCursor
+@onready var player_container = find_child("PlayerContainer", true, false)
+@onready var enemy_container = find_child("EnemyContainer", true, false)
+@onready var action_panel = find_child("ActionPanel", true, false) 
+@onready var ability_list = find_child("AbilityList", true, false)
+@onready var status_label = find_child("StatusLabel", true, false)
+@onready var target_cursor = find_child("TargetCursor", true, false)
+@onready var end_combat_dialog = find_child("EndCombatDialog", true, false)
 
 # References to other scenes
 var combatant_card_scene = preload("res://Scenes/combatant_card.tscn")
@@ -24,16 +27,27 @@ var selected_target_index: int = 0
 
 func _ready() -> void:
 	# Hide action panel and target cursor initially
-	action_panel.visible = false
-	target_cursor.visible = false
+	if action_panel:
+		action_panel.visible = false
+	if target_cursor:
+		target_cursor.visible = false
 	
-	# Connect signals
-	$ActionPanel/AttackButton.pressed.connect(_on_attack_button_pressed)
-	$ActionPanel/AbilitiesButton.pressed.connect(_on_abilities_button_pressed)
-	$ActionPanel/GuardButton.pressed.connect(_on_guard_button_pressed)
-	$ActionPanel/BackButton.pressed.connect(_on_back_button_pressed)
+	# Connect signals - find buttons by their names regardless of hierarchy
+	var attack_button = find_child("AttackButton", true, false)
+	var abilities_button = find_child("AbilitiesButton", true, false)
+	var guard_button = find_child("GuardButton", true, false)
+	var back_button = find_child("BackButton", true, false)
 	
-	ability_list.item_selected.connect(_on_ability_selected)
+	if attack_button:
+		attack_button.pressed.connect(_on_attack_button_pressed)
+	if abilities_button:
+		abilities_button.pressed.connect(_on_abilities_button_pressed)
+	if guard_button:
+		guard_button.pressed.connect(_on_guard_button_pressed)
+	if back_button:
+		back_button.pressed.connect(_on_back_button_pressed)
+	if ability_list:
+		ability_list.item_selected.connect(_on_ability_selected)
 
 func initialize(combat_sys: CombatSystem) -> void:
 	combat_system = combat_sys
@@ -81,16 +95,28 @@ func _on_turn_started(combatant: Combatant) -> void:
 
 func _show_action_menu() -> void:
 	# Show main action buttons
-	action_panel.visible = true
-	$ActionPanel/MainButtons.visible = true
-	$ActionPanel/AbilityList.visible = false
-	$ActionPanel/BackButton.visible = false
+	if action_panel:
+		action_panel.visible = true
+	
+	# Show main buttons, hide ability list
+	var main_buttons = find_child("MainButtons", true, false)
+	if main_buttons:
+		main_buttons.visible = true
+	if ability_list:
+		ability_list.visible = false
+	
+	var back_button = find_child("BackButton", true, false)
+	if back_button:
+		back_button.visible = false
 	
 	# Hide target cursor
-	target_cursor.visible = false
+	if target_cursor:
+		target_cursor.visible = false
 	
 	# Update button states based on available actions
-	$ActionPanel/AbilitiesButton.disabled = current_combatant.abilities.is_empty() or current_combatant.current_mp <= 0
+	var abilities_button = find_child("AbilitiesButton", true, false)
+	if abilities_button and current_combatant:
+		abilities_button.disabled = current_combatant.abilities.is_empty() or current_combatant.current_mp <= 0
 
 func _on_attack_button_pressed() -> void:
 	selected_action = CombatSystem.ActionType.BASIC_ATTACK
@@ -98,18 +124,25 @@ func _on_attack_button_pressed() -> void:
 
 func _on_abilities_button_pressed() -> void:
 	# Show ability list and back button
-	$ActionPanel/MainButtons.visible = false
-	$ActionPanel/AbilityList.visible = true
-	$ActionPanel/BackButton.visible = true
+	var main_buttons = find_child("MainButtons", true, false)
+	if main_buttons:
+		main_buttons.visible = false
+	if ability_list:
+		ability_list.visible = true
+	
+	var back_button = find_child("BackButton", true, false)
+	if back_button:
+		back_button.visible = true
 	
 	# Populate ability list
-	ability_list.clear()
-	
-	for ability in current_combatant.abilities:
-		var mp_text = " (MP: " + str(ability.mp_cost) + ")"
-		var disabled = ability.mp_cost > current_combatant.current_mp
+	if ability_list and current_combatant:
+		ability_list.clear()
 		
-		ability_list.add_item(ability.display_name + mp_text, null, disabled)
+		for ability in current_combatant.abilities:
+			var mp_text = " (MP: " + str(ability.mp_cost) + ")"
+			var disabled = ability.mp_cost > current_combatant.current_mp
+			
+			ability_list.add_item(ability.display_name + mp_text, null, disabled)
 
 func _on_guard_button_pressed() -> void:
 	selected_action = CombatSystem.ActionType.GUARD
@@ -229,16 +262,6 @@ func _on_combat_ended(player_won: bool) -> void:
 		status_label.text = "Defeat!"
 	
 	# Show end combat dialog
-	$EndCombatDialog.window_title = "Combat Ended"
-	$EndCombatDialog.dialog_text = "You " + ("won" if player_won else "lost") + " the battle!"
-	$EndCombatDialog.visible = true
-
-func _on_continue_button_pressed() -> void:
-	# Signal to generate a new enemy team and continue
-	$EndCombatDialog.visible = false
-	emit_signal("continue_combat")
-
-func _on_quit_button_pressed() -> void:
-	# Return to main menu
-	$EndCombatDialog.visible = false
-	get_tree().change_scene_to_file("res://Scenes/start_menu.tscn")
+	end_combat_dialog.dialog_title = "Combat Ended"
+	end_combat_dialog.dialog_text = "You " + ("won" if player_won else "lost") + " the battle!"
+	end_combat_dialog.visible = true

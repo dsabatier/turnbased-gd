@@ -2,25 +2,49 @@
 extends Button
 
 # References to UI elements
-@onready var name_label = $VBoxContainer/NameLabel
-@onready var portrait = $VBoxContainer/Portrait
-@onready var stats_label = $VBoxContainer/StatsLabel
+var name_label: Label
+var portrait: TextureRect
+var stats_label: Label
+
+func _ready() -> void:
+	# Get node references
+	name_label = get_node_or_null("VBoxContainer/NameLabel")
+	portrait = get_node_or_null("VBoxContainer/Portrait")
+	stats_label = get_node_or_null("VBoxContainer/StatsLabel")
 
 # Stored combatant resource
 var combatant_resource: CombatantResource
 
 func initialize(resource: CombatantResource) -> void:
+	# Wait until ready if needed
+	if not is_inside_tree():
+		await ready
+	
+	# Ensure we have valid node references
+	if name_label == null:
+		name_label = get_node_or_null("VBoxContainer/NameLabel")
+	if portrait == null:
+		portrait = get_node_or_null("VBoxContainer/Portrait")
+	if stats_label == null:
+		stats_label = get_node_or_null("VBoxContainer/StatsLabel")
+	
 	combatant_resource = resource
 	
 	# Set basic info
-	name_label.text = resource.display_name
+	if name_label:
+		name_label.text = resource.display_name
 	
 	# Set portrait if available
-	if resource.icon:
-		portrait.texture = resource.icon
+	if portrait:
+		if resource.icon:
+			portrait.texture = resource.icon
+		else:
+			# Set a default texture or placeholder
+			portrait.modulate = Color(0.9, 0.9, 0.9) # Light gray for placeholder
 	
 	# Set stats summary
-	stats_label.text = "HP: " + str(resource.base_hp) + " | MP: " + str(resource.base_mp)
+	if stats_label:
+		stats_label.text = "HP: " + str(resource.base_hp) + " | MP: " + str(resource.base_mp)
 	
 	# Set tooltip with more detailed stats
 	tooltip_text = _create_tooltip(resource)
@@ -36,9 +60,10 @@ func _create_tooltip(resource: CombatantResource) -> String:
 	tooltip += "Speed: " + str(resource.speed) + "\n"
 	
 	# Add abilities if any
-	if resource.abilities.size() > 0:
+	if resource.abilities and resource.abilities.size() > 0:
 		tooltip += "\nAbilities:\n"
 		for ability in resource.abilities:
-			tooltip += "- " + ability.display_name + "\n"
+			if ability:
+				tooltip += "- " + ability.display_name + "\n"
 	
 	return tooltip

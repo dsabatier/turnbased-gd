@@ -124,7 +124,7 @@ func process_basic_attack(attacker: Combatant, target: Combatant) -> void:
 	# Basic attack logic
 	var base_damage = attacker.get_modified_stat("physical_attack")
 	var defense = target.get_modified_stat("physical_defense")
-	var damage = max(1, base_damage - defense)
+	var damage = max(1, base_damage - defense/2)
 	
 	# Apply damage with physical damage type
 	apply_damage(attacker, target, damage, "physical")
@@ -143,7 +143,9 @@ func process_ability(user: Combatant, ability: AbilityResource, target: Combatan
 	# This would need to be expanded based on your ability implementation
 	print(user.display_name + " used " + ability.display_name + " on " + target.display_name)
 	
-	# Here you would implement the ability effects based on your EffectType enum and other properties
+	# Apply a basic damage effect for demo purposes
+	var damage = user.get_modified_stat("magic_attack") * 1.5
+	apply_damage(user, target, int(damage), "magical")
 
 # Process guard action
 func process_guard(combatant: Combatant) -> void:
@@ -175,7 +177,7 @@ func calculate_damage_with_resistances(target: Combatant, base_damage: int, dama
 	
 	# Check if target has resistance to this damage type
 	for resistance in target.damage_resistances:
-		if resistance.id == damage_type:
+		if resistance and resistance.id == damage_type:
 			resistance_multiplier = 0.5
 			break
 	
@@ -198,9 +200,13 @@ func perform_enemy_action(enemy: Combatant) -> void:
 		process_action(enemy, ActionType.BASIC_ATTACK, null, target)
 	elif action_choice < 9:  # 20% chance for ability (if available)
 		if enemy.abilities.size() > 0 and enemy.current_mp > 0:
-			var ability = enemy.abilities[randi() % enemy.abilities.size()]
-			if enemy.current_mp >= ability.mp_cost:
-				process_action(enemy, ActionType.ABILITY, ability, target)
+			var ability_index = randi() % enemy.abilities.size()
+			if ability_index < enemy.abilities.size():
+				var ability = enemy.abilities[ability_index]
+				if ability and enemy.current_mp >= ability.mp_cost:
+					process_action(enemy, ActionType.ABILITY, ability, target)
+				else:
+					process_action(enemy, ActionType.BASIC_ATTACK, null, target)
 			else:
 				process_action(enemy, ActionType.BASIC_ATTACK, null, target)
 		else:
@@ -265,32 +271,30 @@ func end_combat(player_won: bool) -> void:
 	# If player won, heal combatants by 50%
 	if player_won:
 		for combatant in player_combatants:
-			# Regenerate 50% of max HP and MP
-			var hp_regen = int(combatant.max_hp * 0.5)
-			var mp_regen = int(combatant.max_mp * 0.5)
-			
-			combatant.current_hp = min(combatant.current_hp + hp_regen, combatant.max_hp)
-			combatant.current_mp = min(combatant.current_mp + mp_regen, combatant.max_mp)
+			if combatant.current_hp > 0:
+				# Regenerate 50% of max HP and MP
+				var hp_regen = int(combatant.max_hp * 0.5)
+				var mp_regen = int(combatant.max_mp * 0.5)
+				
+				combatant.current_hp = min(combatant.current_hp + hp_regen, combatant.max_hp)
+				combatant.current_mp = min(combatant.current_mp + mp_regen, combatant.max_mp)
 	
 	emit_signal("combat_ended", player_won)
 
 # Generate a random enemy team for the next battle
 func generate_random_enemy_team() -> Array[CombatantResource]:
 	var enemy_resources: Array[CombatantResource] = []
-	var all_combatants = CombatantDatabase.get_all_combatants()
-	
-	# Filter to only include enemy combatants
-	var enemy_pool = []
-	for combatant in all_combatants:
-		if !combatant.is_player_character:  # You would need to add this flag to your CombatantResource
-			enemy_pool.append(combatant)
+	var all_enemies = CombatantDatabase.get_enemy_combatants()
 	
 	# If no enemies in pool, return empty array
-	if enemy_pool.is_empty():
+	if all_enemies.is_empty():
 		return enemy_resources
 	
 	# Choose 1-4 random enemies
 	var enemy_count = 1 + randi() % 4  # 1 to 4 enemies
+	
+	# Make a copy to avoid modifying the original array
+	var enemy_pool = all_enemies.duplicate()
 	
 	for i in range(enemy_count):
 		if enemy_pool.is_empty():
@@ -299,4 +303,7 @@ func generate_random_enemy_team() -> Array[CombatantResource]:
 		var random_index = randi() % enemy_pool.size()
 		enemy_resources.append(enemy_pool[random_index])
 		
+		# Remove to avoid duplicates
+		enemy_pool.remove_at(random_index)
+	
 	return enemy_resources
