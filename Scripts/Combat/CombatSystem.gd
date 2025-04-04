@@ -18,6 +18,10 @@ var current_combatant_index: int = 0
 var current_state: CombatState = CombatState.SETUP
 var round_count: int = 0
 
+func _ready() -> void:
+	# Make sure we process turns properly
+	set_process(false)
+
 # Called when entering combat scene
 func initialize_combat(player_team: Array[CombatantResource], enemy_team: Array[CombatantResource]) -> void:
 	# Clear any existing combatants
@@ -39,7 +43,9 @@ func initialize_combat(player_team: Array[CombatantResource], enemy_team: Array[
 	
 	current_state = CombatState.COMBAT_STARTING
 	round_count = 0
-	start_combat()
+	
+	# Defer starting combat to avoid issues with signal connections
+	call_deferred("start_combat")
 
 # Start the combat sequence
 func start_combat() -> void:
@@ -68,6 +74,9 @@ func determine_turn_order() -> void:
 
 # Start the next combatant's turn
 func start_next_turn() -> void:
+	if current_state == CombatState.COMBAT_ENDED:
+		return
+		
 	if current_combatant_index >= turn_order.size():
 		end_round()
 		return
@@ -83,11 +92,19 @@ func start_next_turn() -> void:
 	# Process turn start effects
 	current_combatant.process_status_effects(StatusEffectResource.TriggerType.TURN_START)
 	
+	# Check if combatant died from status effects
+	if current_combatant.current_hp <= 0:
+		current_combatant_index += 1
+		start_next_turn()
+		return
+	
 	# Signal turn started
 	emit_signal("turn_started", current_combatant)
 	
 	# If it's an enemy, we'll need to handle AI decision making
 	if !current_combatant.is_player:
+		# Add a small delay to make enemy turns visible to the player
+		await get_tree().create_timer(0.5).timeout
 		perform_enemy_action(current_combatant)
 
 # Process an action from a combatant
@@ -138,6 +155,7 @@ func process_ability(user: Combatant, ability: AbilityResource, target: Combatan
 	
 	# Deduct MP
 	user.current_mp -= ability.mp_cost
+	user.emit_signal("mp_changed", user.current_mp, user.get_modified_stat("max_mp"))
 	
 	# Process ability effects based on its type
 	# This would need to be expanded based on your ability implementation
@@ -219,15 +237,29 @@ func get_valid_targets(combatant: Combatant, target_enemies: bool) -> Array[Comb
 	var valid_targets: Array[Combatant] = []
 	
 	if target_enemies:
-		# Get enemy targets
-		for target in enemy_combatants:
-			if target.current_hp > 0:
-				valid_targets.append(target)
+		# Targeting enemies (for either player or enemy)
+		if combatant.is_player:
+			# Player targeting enemies
+			for target in enemy_combatants:
+				if target.current_hp > 0:
+					valid_targets.append(target)
+		else:
+			# Enemy targeting players
+			for target in player_combatants:
+				if target.current_hp > 0:
+					valid_targets.append(target)
 	else:
-		# Get player targets
-		for target in player_combatants:
-			if target.current_hp > 0:
-				valid_targets.append(target)
+		# Targeting allies
+		if combatant.is_player:
+			# Player targeting players
+			for target in player_combatants:
+				if target.current_hp > 0:
+					valid_targets.append(target)
+		else:
+			# Enemy targeting enemies
+			for target in enemy_combatants:
+				if target.current_hp > 0:
+					valid_targets.append(target)
 				
 	return valid_targets
 
@@ -280,6 +312,10 @@ func end_combat(player_won: bool) -> void:
 				
 				combatant.current_hp = min(combatant.current_hp + hp_regen, combatant.max_hp)
 				combatant.current_mp = min(combatant.current_mp + mp_regen, combatant.max_mp)
+				
+				# Make sure signals are emitted for UI updates
+				combatant.emit_signal("hp_changed", combatant.current_hp, combatant.get_modified_stat("max_hp"))
+				combatant.emit_signal("mp_changed", combatant.current_mp, combatant.get_modified_stat("max_mp"))
 	
 	emit_signal("combat_ended", player_won)
 

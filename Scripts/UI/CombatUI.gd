@@ -41,6 +41,9 @@ func _ready() -> void:
 	guard_button.pressed.connect(_on_guard_button_pressed)
 	back_button.pressed.connect(_on_back_button_pressed)
 	ability_list.item_selected.connect(_on_ability_selected)
+	
+	# Handle input for target selection
+	set_process_input(true)
 
 func initialize(combat_sys: CombatSystem) -> void:
 	combat_system = combat_sys
@@ -51,6 +54,9 @@ func initialize(combat_sys: CombatSystem) -> void:
 	
 	# Create UI cards for each combatant
 	_create_combatant_cards()
+	
+	# Show initial status
+	status_label.text = "Combat started"
 
 func _create_combatant_cards() -> void:
 	# Clear existing cards
@@ -132,6 +138,9 @@ func _on_back_button_pressed() -> void:
 	_show_action_menu()
 
 func _on_ability_selected(index: int) -> void:
+	if index < 0 or index >= current_combatant.abilities.size():
+		return
+		
 	selected_action = CombatSystem.ActionType.ABILITY
 	selected_ability = current_combatant.abilities[index]
 	
@@ -174,6 +183,9 @@ func _show_target_selection(target_enemies: bool) -> void:
 	# Start with first target
 	selected_target_index = 0
 	_update_target_cursor()
+	
+	# Update status to guide the player
+	status_label.text = "Select target (←→ to change, Enter to confirm)"
 
 func _update_target_cursor() -> void:
 	# Position the cursor over the selected target
@@ -193,17 +205,21 @@ func _update_target_cursor() -> void:
 		target_cursor.global_position = target_card.global_position + Vector2(target_card.size.x / 2, -20)
 		
 		# Update status text
-		status_label.text = "Select target: " + target.display_name
+		status_label.text = "Target: " + target.display_name + " (←→ to change, Enter to confirm)"
 
 func _input(event: InputEvent) -> void:
 	# Only process input during target selection
-	if !target_cursor.visible:
+	if !target_cursor.visible or potential_targets.is_empty():
 		return
 	
 	if event.is_action_pressed("ui_right") or event.is_action_pressed("ui_left"):
 		# Change target
-		selected_target_index = (selected_target_index + 1) % potential_targets.size()
+		if event.is_action_pressed("ui_right"):
+			selected_target_index = (selected_target_index + 1) % potential_targets.size()
+		else:
+			selected_target_index = (selected_target_index - 1 + potential_targets.size()) % potential_targets.size()
 		_update_target_cursor()
+		get_viewport().set_input_as_handled()
 	
 	elif event.is_action_pressed("ui_accept"):
 		# Confirm target selection
@@ -218,11 +234,13 @@ func _input(event: InputEvent) -> void:
 		
 		# Hide cursor after action
 		target_cursor.visible = false
+		get_viewport().set_input_as_handled()
 	
 	elif event.is_action_pressed("ui_cancel"):
 		# Cancel target selection and return to action menu
 		target_cursor.visible = false
 		_show_action_menu()
+		get_viewport().set_input_as_handled()
 
 func _on_combat_ended(player_won: bool) -> void:
 	# Hide action panel and target cursor
@@ -233,6 +251,6 @@ func _on_combat_ended(player_won: bool) -> void:
 	status_label.text = "Victory!" if player_won else "Defeat!"
 	
 	# Show end combat dialog
-	end_combat_dialog.dialog_title = "Combat Ended"
+	end_combat_dialog.title = "Combat Ended"
 	end_combat_dialog.dialog_text = "You " + ("won" if player_won else "lost") + " the battle!"
 	end_combat_dialog.visible = true
