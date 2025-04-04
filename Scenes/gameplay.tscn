@@ -1,9 +1,15 @@
 [gd_scene load_steps=2 format=3 uid="uid://bxl2o84i4nfda"]
 
-[ext_resource type="Script" path="res://Scripts/Gameplay.gd" id="1_a72kn"]
+[sub_resource type="GDScript" id="GDScript_8s3r4"]
+script/source = "# Gameplay.gd
+extends Node2D
+
+func _on_back_button_pressed() -> void:
+	# Return to the start menu
+	get_tree().change_scene_to_file(\"res://Scenes/start_menu.tscn\")"
 
 [node name="Gameplay" type="Node2D"]
-script = ExtResource("1_a72kn")
+script = SubResource("GDScript_8s3r4")
 
 [node name="PanelContainer" type="PanelContainer" parent="."]
 offset_right = 1152.0

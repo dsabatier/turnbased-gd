@@ -25,7 +25,7 @@ project/assembly_name="Turn Based"
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/damage_types/plugin.cfg")
+enabled=PackedStringArray()
 
 [rendering]
 
