@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://bxl2o84i4nfda"]
+[gd_scene load_steps=2 format=3 uid="uid://cn1ve7x3r7sor"]
 
 [sub_resource type="GDScript" id="GDScript_8s3r4"]
 script/source = "# Gameplay.gd
@@ -6,7 +6,8 @@ extends Node2D
 
 func _on_back_button_pressed() -> void:
 	# Return to the start menu
-	get_tree().change_scene_to_file(\"res://Scenes/start_menu.tscn\")"
+	get_tree().change_scene_to_file(\"res://Scenes/start_menu.tscn\")
+"
 
 [node name="Gameplay" type="Node2D"]
 script = SubResource("GDScript_8s3r4")

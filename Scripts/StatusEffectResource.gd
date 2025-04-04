@@ -35,7 +35,5 @@ enum StackingBehavior {
 @export var modify_max_hp: int = 0
 @export var modify_max_mp: int = 0
 
-
-@export var damage_reduction_percent: float = 0
-@export var damage_dealt_percent_mod: float = 0.0  # % increase/decrease to damage dealt
-@export var healing_dealt_percent_mod: float = 0.0  # % increase/decrease to healing dealt
+@export var critical_hit_chance: float = 0
+@export var critical_hit_damage: float = 0
