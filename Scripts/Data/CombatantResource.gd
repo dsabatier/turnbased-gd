@@ -22,5 +22,6 @@ extends Resource
 
 @export var damage_resistances: Array[DamageTypeResource]
 
-@export_group("Abilities")
+@export_group("Actions")
+@export var basic_attack : AbilityResource
 @export var abilities: Array[AbilityResource] = []  # Can contain AbilityResource instances

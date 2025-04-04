@@ -1,0 +1,131 @@
+[gd_scene load_steps=2 format=3 uid="uid://cibu1aw6qbxwi"]
+
+[ext_resource type="Script" path="res://Scripts/Combat/CombatScene.gd" id="1_x2bos"]
+
+[node name="Combat" type="Node"]
+script = ExtResource("1_x2bos")
+
+[node name="CombatUI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="Panel" parent="CombatUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CombatLayout" type="VBoxContainer" parent="CombatUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_bottom = -150.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="EnemyContainer" type="HBoxContainer" parent="CombatUI/CombatLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="BattlefieldSeparator" type="HSeparator" parent="CombatUI/CombatLayout"]
+layout_mode = 2
+
+[node name="PlayerContainer" type="HBoxContainer" parent="CombatUI/CombatLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+alignment = 1
+
+[node name="ActionPanel" type="PanelContainer" parent="CombatUI"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -150.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="MainButtons" type="HBoxContainer" parent="CombatUI/ActionPanel"]
+layout_mode = 2
+alignment = 1
+
+[node name="AttackButton" type="Button" parent="CombatUI/ActionPanel"]
+custom_minimum_size = Vector2(120, 60)
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Attack"
+
+[node name="AbilitiesButton" type="Button" parent="CombatUI/ActionPanel"]
+custom_minimum_size = Vector2(120, 60)
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Abilities"
+
+[node name="GuardButton" type="Button" parent="CombatUI/ActionPanel"]
+custom_minimum_size = Vector2(120, 60)
+layout_mode = 2
+size_flags_horizontal = 6
+text = "Guard"
+
+[node name="AbilityList" type="ItemList" parent="CombatUI/ActionPanel"]
+visible = false
+layout_mode = 2
+auto_height = true
+item_count = 1
+item_0/text = "Fireball (MP: 10)"
+
+[node name="BackButton" type="Button" parent="CombatUI/ActionPanel"]
+visible = false
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 8
+text = "Back"
+
+[node name="StatusLabel" type="Label" parent="CombatUI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -150.0
+offset_top = 20.0
+offset_right = 150.0
+offset_bottom = 46.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 18
+text = "Combat Started"
+horizontal_alignment = 1
+
+[node name="TargetCursor" type="Polygon2D" parent="CombatUI"]
+position = Vector2(300, 200)
+color = Color(1, 0.85098, 0, 1)
+polygon = PackedVector2Array(0, 0, 10, 15, -10, 15)
+
+[node name="EndCombatDialog" type="AcceptDialog" parent="CombatUI"]
+title = "Combat Ended"
+initial_position = 2
+size = Vector2i(300, 150)
+dialog_text = "You won the battle!"
+dialog_autowrap = true
+
+[node name="ContinueButton" type="Button" parent="CombatUI/EndCombatDialog"]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 138.0
+offset_bottom = 39.0
+text = "Continue"
+
+[node name="QuitButton" type="Button" parent="CombatUI/EndCombatDialog"]
+offset_left = 154.0
+offset_top = 8.0
+offset_right = 284.0
+offset_bottom = 39.0
+text = "Quit"
