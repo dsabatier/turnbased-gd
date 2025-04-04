@@ -214,16 +214,18 @@ func perform_enemy_action(enemy: Combatant) -> void:
 	else:  # 10% chance for guard
 		process_action(enemy, ActionType.GUARD)
 
-# Get valid targets based on the target type
-func get_valid_targets(combatant: Combatant, is_player_targets: bool) -> Array:
-	var valid_targets = []
+# Get valid targets based on if we want player or enemy targets
+func get_valid_targets(combatant: Combatant, target_enemies: bool) -> Array[Combatant]:
+	var valid_targets: Array[Combatant] = []
 	
-	if is_player_targets:
-		for target in player_combatants:
+	if target_enemies:
+		# Get enemy targets
+		for target in enemy_combatants:
 			if target.current_hp > 0:
 				valid_targets.append(target)
 	else:
-		for target in enemy_combatants:
+		# Get player targets
+		for target in player_combatants:
 			if target.current_hp > 0:
 				valid_targets.append(target)
 				

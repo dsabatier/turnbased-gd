@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://cibu1aw6qbxwi"]
+[gd_scene load_steps=4 format=3 uid="uid://cibu1aw6qbxwi"]
 
 [ext_resource type="Script" path="res://Scripts/Combat/CombatScene.gd" id="1_x2bos"]
 [ext_resource type="Script" path="res://Scripts/UI/CombatUI.gd" id="2_p0qtx"]
+[ext_resource type="PackedScene" path="res://Scenes/debug_overlay.tscn" id="3_xm4r5"]
 
 [node name="Combat" type="Node"]
 script = ExtResource("1_x2bos")
@@ -59,19 +60,19 @@ grow_vertical = 0
 layout_mode = 2
 alignment = 1
 
-[node name="AttackButton" type="Button" parent="CombatUI/ActionPanel"]
+[node name="AttackButton" type="Button" parent="CombatUI/ActionPanel/MainButtons"]
 custom_minimum_size = Vector2(120, 60)
 layout_mode = 2
 size_flags_horizontal = 6
 text = "Attack"
 
-[node name="AbilitiesButton" type="Button" parent="CombatUI/ActionPanel"]
+[node name="AbilitiesButton" type="Button" parent="CombatUI/ActionPanel/MainButtons"]
 custom_minimum_size = Vector2(120, 60)
 layout_mode = 2
 size_flags_horizontal = 6
 text = "Abilities"
 
-[node name="GuardButton" type="Button" parent="CombatUI/ActionPanel"]
+[node name="GuardButton" type="Button" parent="CombatUI/ActionPanel/MainButtons"]
 custom_minimum_size = Vector2(120, 60)
 layout_mode = 2
 size_flags_horizontal = 6
@@ -131,3 +132,5 @@ offset_top = 8.0
 offset_right = 284.0
 offset_bottom = 39.0
 text = "Quit"
+
+[node name="DebugOverlay" parent="." instance=ExtResource("3_xm4r5")]

@@ -4,9 +4,10 @@ extends Node
 # References
 @onready var combat_ui = $CombatUI
 @onready var end_combat_dialog = $CombatUI/EndCombatDialog
+@onready var debug_overlay = $DebugOverlay
 
 # Combat system
-var combat_system = CombatSystem.new()
+var combat_system: CombatSystem
 
 # Saved player party for continuing battles
 var player_party: Array[CombatantResource] = []
@@ -14,6 +15,14 @@ var player_party: Array[CombatantResource] = []
 func _ready() -> void:
 	# Get the saved team selection from the party selection scene
 	var team_selection = get_node("/root/TeamSelection")
+	
+	# Create combat system instance
+	combat_system = CombatSystem.new()
+	add_child(combat_system)
+	
+	# Initialize debug overlay
+	if debug_overlay:
+		debug_overlay.initialize(combat_system)
 	
 	# Check if we have valid teams
 	if team_selection and !team_selection.player_team.is_empty() and !team_selection.enemy_team.is_empty():
@@ -30,16 +39,20 @@ func _ready() -> void:
 	combat_ui.connect("continue_combat", _on_continue_combat)
 	$CombatUI/EndCombatDialog/ContinueButton.pressed.connect(_on_continue_button_pressed)
 	$CombatUI/EndCombatDialog/QuitButton.pressed.connect(_on_quit_button_pressed)
+	
+	# Display instructions
+	print("Combat initialized. Press F3 to toggle debug overlay.")
 
 func _start_combat(player_team: Array[CombatantResource], enemy_team: Array[CombatantResource]) -> void:
-	# Add the combat system as a child of this scene
-	add_child(combat_system)
-	
 	# Initialize the combat system
 	combat_system.initialize_combat(player_team, enemy_team)
 	
 	# Initialize the UI
 	combat_ui.initialize(combat_system)
+	
+	# Update debug overlay
+	if debug_overlay:
+		debug_overlay.update_debug_info()
 
 func _create_demo_combat() -> void:
 	# Get some demo combatants
@@ -72,6 +85,11 @@ func _on_continue_combat() -> void:
 	
 	# Create a new combat system
 	combat_system = CombatSystem.new()
+	add_child(combat_system)
+	
+	# Update debug overlay reference
+	if debug_overlay:
+		debug_overlay.initialize(combat_system)
 	
 	# Start a new combat with the same player team
 	_start_combat(player_party, enemy_team)
